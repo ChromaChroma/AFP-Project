@@ -40,22 +40,36 @@ executable Code-Commit
     other-modules:    Api.CodeProblem
                   ,   Types
                   ,   Security
+                  ,   Security.API
+                  ,   Security.App
+                  ,   Security.Claims
+                  ,   Security.User
+                  ,   Security.Auth
+                  ,   Security.Handlers 
     -- exposed-modules: 
     -- other-extensions:
     build-depends:  base            >=4.17.2.1
                 ,   containers
                 ,   lens
                 ,   time
+
                 ,   bytestring
+                ,   utf8-string
                 ,   text
+
                 ,   warp
                 ,   aeson 
-                ,   aeson-pretty         
+                -- ,   aeson-pretty         
                 ,   servant         ^>= 0.20
                 ,   servant-server  ^>= 0.20
                 ,   servant-auth
                 ,   servant-auth-server
                 ,   wai
+                ,   mtl
+
+                ,   exceptions
+                ,   jose
+                ,   uuid
                 -- ,   servant-swagger
                 -- ,   servant-checked-exceptions
                 -- ,   swagger2
