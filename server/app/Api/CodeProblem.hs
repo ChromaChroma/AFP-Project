@@ -7,6 +7,7 @@ module Api.CodeProblem where
 
 import Data.Aeson
 import Data.Proxy
+import Data.List (find)
 import Data.Text (Text)
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Typeable (Typeable)
@@ -28,11 +29,13 @@ codingProblemApi = Proxy
 type CodingProblemAPI = 
   -- | GET /coding-problems
   -- returns list of coding problems
-  "coding-problems" :> Get '[JSON] [CodingProblem] 
+  "coding-problems" 
+    :> Get '[JSON] [CodingProblem]
 
   -- | GET /coding-problems/:id
   -- returns specific coding problem
-  :<|> "coding-problems" :> Capture "id" Text :> Get '[JSON] CodingProblem
+  :<|> "coding-problems" :> Capture "id" Text 
+    :> Get '[JSON] CodingProblem
 
 
 {- Handlers -}
@@ -42,7 +45,9 @@ handlers = getCodingProblems :<|> getCodingProblem
   where 
     getCodingProblems      = return dummyCodingProblems
     -- getCodingProblem :: Text -> CodingProblem
-    getCodingProblem ident = return. head $ filter ((ident ==) . _id) dummyCodingProblems
+    getCodingProblem ident = return $ case find ((ident ==) . _id) dummyCodingProblems of 
+      Just x -> x 
+      Nothing -> error "Could not find CodingProblem wiht id"
 
 
 {- Dummy Values -}

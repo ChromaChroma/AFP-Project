@@ -15,11 +15,10 @@ module Main where
 -- import Network.Wai
 import Network.Wai.Handler.Warp
 
-import Control.Lens
+-- import Control.Lens
 import Data.Aeson
 import Data.Aeson.Encode.Pretty (encodePretty)
 import Data.Proxy
-import Data.Swagger
 import Data.Text
 import Data.Time (UTCTime (..), fromGregorian)
 import GHC.Generics
@@ -50,7 +49,6 @@ import qualified Api.CodeProblem as CP
 -- -- | API for serving @swagger.json@.
 -- type SwaggerAPI =  "swagger.json" :> Get '[JSON] Swagger
 -- API specification
-type API = CP.CodingProblemAPI -- :<|>
 
 -- type TestApi =
 --   SwaggerAPI
@@ -75,6 +73,7 @@ type API = CP.CodingProblemAPI -- :<|>
 -- There's one handler per endpoint, which, just like in the type
 -- that represents the API, are glued together using :<|>.
 --
+
 -- Each handler runs in the 'Handler' monad.
 -- server :: Server TestApi
 -- server = return swagger :<|> helloH :<|> postGreetH :<|> deleteGreetH :<|> otherRoutes
@@ -107,10 +106,16 @@ type API = CP.CodingProblemAPI -- :<|>
 -- writeSwaggerJSON :: IO ()
 -- writeSwaggerJSON = BL8.writeFile "server/swagger.json" (encodePretty swagger)
 
+type API = CP.CodingProblemAPI 
 
--- Put this all to work!
+apiProxy ::Proxy API
+apiProxy = Proxy
+
+server :: Server API
+server = CP.handlers
+
 main :: IO ()
 main = do
-  putStrLn "Running server on 8001"
-  -- runTestServer 8001
-  run 8001 $ serve (Proxy :: Proxy API) CP.handlers
+  let port = 8001
+  putStrLn $ "Running server on " <> show port
+  run port $ serve apiProxy server

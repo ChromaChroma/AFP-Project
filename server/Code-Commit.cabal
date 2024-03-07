@@ -52,8 +52,9 @@ executable Code-Commit
                 ,   aeson-pretty         
                 ,   servant         ^>= 0.20
                 ,   servant-server  ^>= 0.20
-                ,   servant-swagger
-                ,   swagger2
+                -- ,   servant-swagger
+                -- ,   servant-checked-exceptions
+                -- ,   swagger2
 
 
 test-suite test
