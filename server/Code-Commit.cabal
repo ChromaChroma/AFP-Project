@@ -38,6 +38,7 @@ executable Code-Commit
     hs-source-dirs:   app
     main-is:          Main.hs
     other-modules:    Api.CodeProblem
+                  ,   Types
     -- exposed-modules: 
     -- other-extensions:
     build-depends:  base            >=4.17.2.1
