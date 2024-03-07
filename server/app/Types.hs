@@ -4,6 +4,7 @@ module Types where
 
 import Data.Aeson
 import Data.Text 
+import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Data.Typeable (Typeable)
 
@@ -47,11 +48,9 @@ data ProblemDifficulty = Easy | Intermediate | Difficult | Extreme
 
 type Tag = Text
 
-type DateTime = Text -- TODO change to date datatype?
-
 data CodingProblem = CodingProblem
-  { id           :: CodingProblemId,
-    deadline     :: DateTime,
+  { _id           :: CodingProblemId,
+    deadline     :: UTCTime,
     problemTags  :: [Tag],
     difficulty   :: ProblemDifficulty,
     title        :: Text,
@@ -80,8 +79,8 @@ data AttemptState r e
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
 
 data Attempt r e = Attempt
-  { submittedOn     :: DateTime,
-    runCompletedOn  :: DateTime,
+  { submittedOn     :: UTCTime,
+    runCompletedOn  :: UTCTime,
     code            :: Code,
     state           :: AttemptState r e
   }

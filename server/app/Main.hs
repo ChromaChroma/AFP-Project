@@ -30,7 +30,7 @@ import Servant
 import Servant.Server.Generic ()
 import Servant.API.Generic ((:-))
 
-import Api.CodeProblem
+import qualified Api.CodeProblem as CP
 
 -- * Example
 
@@ -50,7 +50,7 @@ import Api.CodeProblem
 -- -- | API for serving @swagger.json@.
 -- type SwaggerAPI =  "swagger.json" :> Get '[JSON] Swagger
 -- API specification
-type API = UserAPI -- :<|>
+type API = CP.CodingProblemAPI -- :<|>
 
 -- type TestApi =
 --   SwaggerAPI
@@ -113,4 +113,4 @@ main :: IO ()
 main = do
   putStrLn "Running server on 8001"
   -- runTestServer 8001
-  run 8001 $ serve(Proxy :: Proxy API) userApiHandlers
+  run 8001 $ serve (Proxy :: Proxy API) CP.handlers

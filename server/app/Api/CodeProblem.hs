@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PolyKinds         #-}
 {-# LANGUAGE TypeFamilies      #-}
@@ -8,7 +7,7 @@ module Api.CodeProblem where
 
 import Data.Aeson
 import Data.Proxy
-import Data.Text 
+import Data.Text (Text)
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Typeable (Typeable)
 import GHC.Generics
@@ -18,39 +17,49 @@ import Servant
 import Servant.Server.Generic ()
 import Servant.API.Generic ((:-))
 
---API
+import Types
 
-userApi :: Proxy UserAPI
-userApi = Proxy
 
-type UserAPI = 
-  "users" :> Get '[JSON] [User] 
-    -- | GET /hello/:name?capital={true, false}  returns a Greet as JSON
-  :<|> "users" :> Capture "name" Text :> QueryParam "capital" Bool :> Get '[JSON] User
+{- API -}
 
--- Datatypes
+codingProblemApi :: Proxy CodingProblemAPI
+codingProblemApi = Proxy
 
-data User = User
-  { name :: Text,
-    age :: Int,
-    email :: Text,
-    registration_date :: UTCTime
-  } 
-  deriving (Generic, Show, Typeable)
+type CodingProblemAPI = 
+  -- | GET /coding-problems
+  -- returns list of coding problems
+  "coding-problems" :> Get '[JSON] [CodingProblem] 
 
--- type CodeProblemAPI = "code-problems"  :>
+  -- | GET /coding-problems/:id
+  -- returns specific coding problem
+  :<|> "coding-problems" :> Capture "id" Text :> Get '[JSON] CodingProblem
 
-instance FromJSON User
-instance ToJSON User
 
--- Server-side handlers
-userApiHandlers :: Server UserAPI
-userApiHandlers = users :<|> helloUser
+{- Handlers -}
+
+handlers :: Server CodingProblemAPI
+handlers = getCodingProblems :<|> getCodingProblem
   where 
-    randomDate = UTCTime (fromGregorian 2018 10 27) (secondsToDiffTime 0)
+    getCodingProblems      = return dummyCodingProblems
+    -- getCodingProblem :: Text -> CodingProblem
+    getCodingProblem ident = return. head $ filter ((ident ==) . _id) dummyCodingProblems
 
-    users = return [ User "John Doe" 35 "some@gmail.com" randomDate ]
 
-    helloUser name Nothing      = helloUser name (Just False)
-    helloUser name (Just False) = return $ User name 35 "some@gmail.com" randomDate
-    helloUser name (Just True)  = return $ User (toUpper name) 35 "some@gmail.com" randomDate
+{- Dummy Values -}
+
+randomDate = UTCTime (fromGregorian 2018 10 27) (secondsToDiffTime 0)
+
+dummyCodingProblems = [
+  CodingProblem {
+    _id = "123",
+    deadline = randomDate,
+    problemTags  = [ "Optimization" ],
+    difficulty   = Intermediate,
+    title        = "Optimize for loop",
+    description  = "Optimize the while loop below. Currently it has a time complexity of O(n^2), but can be O(n).",
+    testCases = [
+      ("Test case 1: Should not crash", "[1,2,3,4,5]", "[2,4,6,8,10]", Visible)
+    ],
+    templateCode = "module OptimizeLoop where \n import Data.Functor \n"
+  }
+  ]
