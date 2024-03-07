@@ -5,7 +5,6 @@
 
 module Security.Auth (authHandler, signToken, generateKey) where
 
-import Control.Arrow (second, (>>>))
 import Control.Monad (guard)
 import Control.Monad.IO.Class (liftIO)
 import Crypto.JOSE
