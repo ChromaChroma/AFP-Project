@@ -39,10 +39,11 @@ executable Code-Commit
     main-is:          Main.hs
     other-modules:    Api.CodeProblem
                   ,   Types
+                  ,   Security
     -- exposed-modules: 
     -- other-extensions:
     build-depends:  base            >=4.17.2.1
-                -- ,   containers
+                ,   containers
                 ,   lens
                 ,   time
                 ,   bytestring
@@ -52,6 +53,9 @@ executable Code-Commit
                 ,   aeson-pretty         
                 ,   servant         ^>= 0.20
                 ,   servant-server  ^>= 0.20
+                ,   servant-auth
+                ,   servant-auth-server
+                ,   wai
                 -- ,   servant-swagger
                 -- ,   servant-checked-exceptions
                 -- ,   swagger2

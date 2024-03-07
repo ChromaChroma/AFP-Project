@@ -8,6 +8,8 @@ import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Data.Typeable (Typeable)
 
+import Servant.Auth.JWT (FromJWT, ToJWT)
+
 {- Security -}
 type UserId = Text 
 type Username = Text
@@ -21,13 +23,13 @@ data User = User
     password :: Password,
     role     :: Role
   }
-  deriving (Generic, Show, Typeable, FromJSON, ToJSON)
+  deriving (Eq, Show, Generic, Typeable, FromJSON, ToJSON, FromJWT, ToJWT)
 
 
 data Role
   = UserRole  -- ^ Standard user
   | AdminRole -- ^ Administrative user
-  deriving (Generic, Show, Typeable, FromJSON, ToJSON)
+  deriving (Eq, Show, Generic, Typeable, FromJSON, ToJSON)
 
 {- Domain -}
 

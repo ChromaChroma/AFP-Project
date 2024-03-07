@@ -44,7 +44,6 @@ handlers :: Server CodingProblemAPI
 handlers = getCodingProblems :<|> getCodingProblem
   where 
     getCodingProblems      = return dummyCodingProblems
-    -- getCodingProblem :: Text -> CodingProblem
     getCodingProblem ident = return $ case find ((ident ==) . _id) dummyCodingProblems of 
       Just x -> x 
       Nothing -> error "Could not find CodingProblem wiht id"
