@@ -1,8 +1,8 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (class)
 import Html.Events exposing (..)
 import Http
 import Json.Decode as D exposing (Decoder, map8, field, string, list)
@@ -34,7 +34,7 @@ type ProblemDifficulty
 type alias CodeProblem =
   { id           : String
   , deadline     : String
-  , problemTags   : List String
+  , problemTags  : List String
   , difficulty   : ProblemDifficulty
   , title        : String
   , description  : String
@@ -43,8 +43,7 @@ type alias CodeProblem =
   }
 
 init : () -> (Model, Cmd Msg)
-init _ =
-  (Loading, getCodeProblem)
+init _ = (Loading, getCodeProblem)
 
 -- UPDATE
 
@@ -70,7 +69,7 @@ subscriptions _ = Sub.none
 
 view : Model -> Html Msg
 view model =
-  div []
+  div [ class "container"]
     [ h2 [] [ text "Coding Problem:" ]
     , viewProblem model
     ]
@@ -119,7 +118,3 @@ codeProblemDecoder =
     (field "description" string)
     (field "testCases" (list string))
     (field "templateCode" string)
-
-
-
-
