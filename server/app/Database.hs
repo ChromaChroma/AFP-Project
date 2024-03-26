@@ -1,8 +1,10 @@
 module Database where 
 
 -- | Dependency imports
-import Data.List (find)
-import Data.Text (Text)
+import Control.Monad.Catch  (MonadThrow(..))
+import Data.List            (find)
+import Data.Text            (Text)
+import Servant              
 -- | Project imports
 import qualified Dummy as D
 import Types
@@ -10,6 +12,9 @@ import Types
 allCodingProblems :: [CodingProblem]
 allCodingProblems = D.dummyCodingProblems
 
-findCodingProblemById :: Text -> Maybe CodingProblem
-findCodingProblemById ident = find ((ident ==) . _id) D.dummyCodingProblems
+findCodingProblemById :: (MonadThrow m) => Text -> m CodingProblem
+findCodingProblemById ident = case find ((ident ==) . _id) D.dummyCodingProblems of 
+  Just x  -> pure x 
+  Nothing -> throwM err404 { errBody = "Could not find coding problem with id" }
+ 
 

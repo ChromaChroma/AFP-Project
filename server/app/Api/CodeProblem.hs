@@ -1,24 +1,25 @@
-{-# LANGUAGE PolyKinds  #-}
+{-# LANGUAGE PolyKinds         #-}
 {-# LANGUAGE DeriveAnyClass    #-}
 
 module Api.CodeProblem where
 
 -- | Dependency imports
-import Control.Monad.Catch (MonadThrow(..))
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Text (Text)
-import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
-import Network.Wai.Handler.Warp
-import Servant
-import Servant.API.Generic ((:-))
-import Security.App (App)
-import Security.Auth (AuthJwtAccess)
-import Servant.Server.Generic (AsServerT)
+import Control.Monad.Catch      (MonadThrow(..))
+import Control.Monad.IO.Class   (liftIO, MonadIO)
+import Data.Aeson               (FromJSON, ToJSON)
+import Data.Text                (Text)
+import Data.Typeable            (Typeable)
+import GHC.Generics             (Generic)
+import Network.Wai.Handler.Warp 
+import Servant                  
+import Servant.API.Generic      ((:-))
+import Security.App             (App)
+import Security.Auth            (AuthJwtAccess)
+import Servant.Server.Generic   (AsServerT)
 -- | Project imports
 import Types
-import Security.Claims (AccessClaims)
-import Database (allCodingProblems, findCodingProblemById)
+import Security.Claims          (AccessClaims)
+import Database                 (allCodingProblems, findCodingProblemById)
 
 {- Data Transfer Objects -}
 
@@ -56,14 +57,15 @@ type SubmitCodingAttempt mode = mode :- AuthJwtAccess
 
 handlers :: CodingProblemAPI (AsServerT App)
 handlers = getCodingProblems :<|> getCodingProblem :<|> submitAttempt 
-  where 
-    getCodingProblems = pure allCodingProblems
 
-    getCodingProblem ident = pure $ case findCodingProblemById ident of 
-      Just x -> x 
-      Nothing -> error "Could not find CodingProblem with id"
+getCodingProblems :: (MonadThrow m) => m [CodingProblem]
+getCodingProblems = pure allCodingProblems
+
+getCodingProblem :: (MonadThrow m) => Text -> m CodingProblem
+getCodingProblem = findCodingProblemById 
   
-    submitAttempt (Just _) pId (AttemptDTO code) = case findCodingProblemById pId of 
-                                                      Just x  -> pure "Done"
-                                                      Nothing -> throwM err404
-    submitAttempt _ _ _                             = throwM err401
+submitAttempt :: (MonadThrow m, MonadIO m) => Maybe AccessClaims -> Text -> AttemptDTO -> m Text
+submitAttempt (Just _) pId (AttemptDTO code) = do 
+                                                cp <- findCodingProblemById pId
+                                                pure "Done"
+submitAttempt _ _ _                             = throwM err401
