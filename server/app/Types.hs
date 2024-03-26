@@ -88,6 +88,10 @@ data Attempt r e = Attempt
   }
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
 
+-- | Type synonym for a normal, simple attempt.
+-- Gives string messages of succes of failure
+type NormalAttempt = Attempt String String
+
 {- Score system -}
 type Score = Int
 

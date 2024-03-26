@@ -22,13 +22,15 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.ByteString.Lazy.UTF8 (toString)
 import Data.Text (Text, pack)
 import Data.Time (getCurrentTime)
-import Data.UUID (nil, UUID)
+import Data.UUID (nil, UUID, fromString)
 import GHC.Generics (Generic)
 import Servant (err401, err404)
   
 import Security.Auth (signToken)
 import Security.User (User(..))
 import Security.Claims (RefreshClaims, accessClaims, refreshClaims, subjectClaim)
+
+import Data.Maybe (fromJust)
 
 data LoginRequest = LoginRequest
   { username :: !Text
@@ -54,12 +56,11 @@ loginResponse jwk acc refr = do
 toText :: SignedJWT -> Text
 toText = pack . toString . encodeCompact
 
-loginHandler :: (MonadThrow m, MonadIO m) 
-             => JWK -> LoginRequest -> m LoginResponse
+loginHandler :: (MonadThrow m, MonadIO m) => JWK -> LoginRequest -> m LoginResponse
 loginHandler jwk LoginRequest {..} = case attemptLogin username password of 
   Just _  -> do
     now <- liftIO getCurrentTime
-    loginResponse jwk (accessClaims nil now) (refreshClaims nil now)
+    loginResponse jwk (accessClaims dummyUUID now) (refreshClaims dummyUUID now)
   _       -> throwM err401
   where
     -- | TODO: Attempt actual login check
@@ -67,8 +68,7 @@ loginHandler jwk LoginRequest {..} = case attemptLogin username password of
     attemptLogin "user" "12345" = Just (User username "SomeEmail")
     attemptLogin _ _            = Nothing
 
-refreshTokenHandler :: (MonadThrow m, MonadIO m)
-                    => JWK -> Maybe RefreshClaims -> m LoginResponse
+refreshTokenHandler :: (MonadThrow m, MonadIO m) => JWK -> Maybe RefreshClaims -> m LoginResponse
 refreshTokenHandler jwk (Just claims@(subjectClaim -> Just uid)) = do
   now <- liftIO getCurrentTime
   loginResponse jwk (accessClaims uid now) claims
@@ -80,3 +80,4 @@ getUserHandler uid
   | uid /= nil = pure (User "user" "user@mail.com") --TODO change to actual user data 
   | otherwise  = throwM err404
   
+dummyUUID = fromJust $ fromString "08a2c3d9-b7ec-48e5-8f40-3a942ad01130"

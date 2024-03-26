@@ -49,7 +49,7 @@ executable Code-Commit
     -- exposed-modules: 
     -- other-extensions:
     build-depends:  base            >=4.17.2.1
-                -- ,   containers
+                ,   containers
                 ,   lens
                 ,   time
                 ,   mtl

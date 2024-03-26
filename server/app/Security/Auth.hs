@@ -1,9 +1,11 @@
 {-# LANGUAGE LambdaCase         #-}
 {-# LANGUAGE OverloadedStrings  #-}
--- {-# LANGUAGE ViewPatterns       #-}
-{-# LANGUAGE TypeApplications       #-}
+{-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE TypeApplications   #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE TypeFamilies       #-}
 
-module Security.Auth (authHandler, signToken, generateKey) where
+module Security.Auth (AuthJwtAccess, AuthJwtRefresh, authHandler, signToken, generateKey) where
 
 import Control.Monad (guard)
 import Control.Monad.IO.Class (liftIO)
@@ -22,7 +24,21 @@ import Data.ByteString.UTF8 (ByteString)
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as LBS
 import Network.Wai (Request, requestHeaders)
-import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
+import Servant (AuthProtect)
+import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
+import Security.Claims (AccessClaims, RefreshClaims)
+
+
+----------------------------------------------------
+
+type AuthJwtAccess  = AuthProtect "jwt-access'"
+type AuthJwtRefresh = AuthProtect "jwt-refresh'"
+
+type instance AuthServerData AuthJwtAccess  = Maybe AccessClaims
+type instance AuthServerData AuthJwtRefresh = Maybe RefreshClaims
+
+----------------------------------------------------
+
 
 authHandler :: (HasClaimsSet a, FromJSON a) 
             => JWK -> JWTValidationSettings -> AuthHandler Request (Maybe a)
@@ -32,7 +48,7 @@ authHandler jwk settings = mkAuthHandler $ \case
 
 getToken :: Request -> Maybe ByteString
 getToken req = do
-  (scheme, token)  <- BS.break (== ' ') <$> lookup "Authorization " (requestHeaders req)
+  (scheme, token)  <- BS.break (== ' ') <$> lookup "Authorization" (requestHeaders req)
   guard (scheme == "Bearer")
   return $ BS.drop 1 token
 
