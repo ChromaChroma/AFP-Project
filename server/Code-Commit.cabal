@@ -75,6 +75,9 @@ executable Code-Commit
       
       -- | Dependency to use return status codes through exceptions
       , exceptions
+
+      -- | Dependency to allow system interaction
+      , process
     default-extensions: 
         DataKinds
       , DeriveGeneric

@@ -1,8 +1,4 @@
--- {-# LANGUAGE PolyKinds         #-}
--- {-# LANGUAGE FlexibleContexts  #-}
--- {-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PolyKinds         #-}
 {-# LANGUAGE TypeFamilies      #-}
@@ -12,7 +8,7 @@ module Main where
 
 -- | Dependency imports
 import Control.Concurrent       (forkIO)
-import Control.Monad            (forever)
+import Control.Monad            (forever, guard)
 import Control.Monad.Catch      (MonadThrow, try)
 import Control.Monad.Except     (ExceptT(..))
 import Control.Monad.Identity   (IdentityT (..))
@@ -26,12 +22,30 @@ import Security.App             (appToHandler)
 import Security.Auth            (authHandler, generateKey)
 import Security.Claims          (AccessClaims, RefreshClaims, accessSettings, refreshSettings)
 
+import System.Process
+import System.Exit
 
 port :: Int
 port = 8080
 
+ghcCheck :: IO Bool
+ghcCheck = do
+  (exitCode, output, _) <- readProcessWithExitCode "ghc" ["--version"] ""
+  let errMsg = "GHC 9.4.8 needs to be installed and accessible for the server to work properly"
+
+  -- Check if GHC is installed properly
+  case exitCode of
+    ExitSuccess   -> case splitAt 57 $ head (lines output) of 
+      ("The Glorious Glasgow Haskell Compilation System, version " , "9.4.8") -> putStrLn "GHC correctly installed on server" >> pure True
+      ("The Glorious Glasgow Haskell Compilation System, version " , right)   -> putStrLn ("Wrong version of GHC installed, expected 9.4.8, but was: " ++ show right) >> pure False
+      _                                                                       -> putStrLn errMsg >> pure False
+    ExitFailure _ -> putStrLn errMsg >> pure False
+
 main :: IO ()
 main = do
+  installed <- ghcCheck
+  guard installed
+
   putStrLn banner
 
   jwk <- generateKey

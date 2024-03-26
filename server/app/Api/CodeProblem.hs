@@ -66,6 +66,8 @@ getCodingProblem = findCodingProblemById
   
 submitAttempt :: (MonadThrow m, MonadIO m) => Maybe AccessClaims -> Text -> AttemptDTO -> m Text
 submitAttempt (Just _) pId (AttemptDTO code) = do 
-                                                cp <- findCodingProblemById pId
-                                                pure "Done"
-submitAttempt _ _ _                             = throwM err401
+                                                cp  <- findCodingProblemById pId
+                                                res <- liftIO (print code)
+                                                pure  "Done!" 
+submitAttempt _ _ _                           = throwM err401
+
