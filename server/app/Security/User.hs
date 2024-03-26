@@ -1,11 +1,11 @@
-{-# LANGUAGE DeriveAnyClass     #-}
-{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE DeriveAnyClass    #-}
 
 module Security.User (User(..)) where
 
-import Data.Aeson (FromJSON, ToJSON)
+-- | Dependency imports
+import Data.Aeson   (FromJSON, ToJSON)
 import GHC.Generics (Generic)
-import Data.Text (Text)
+import Data.Text    (Text)
 
 data User = User
   { username :: !Text

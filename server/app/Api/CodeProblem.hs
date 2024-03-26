@@ -1,30 +1,21 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PolyKinds         #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE PolyKinds  #-}
 {-# LANGUAGE DeriveAnyClass    #-}
-module Api.CodeProblem
--- (
---   CodingProblemAPI,
---   handlers
--- ) 
-where
 
+module Api.CodeProblem where
+
+-- | Dependency imports
 import Control.Monad.Catch (MonadThrow(..))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
-
 import Network.Wai.Handler.Warp
 import Servant
 import Servant.API.Generic ((:-))
 import Security.App (App)
 import Security.Auth (AuthJwtAccess)
 import Servant.Server.Generic (AsServerT)
-
+-- | Project imports
 import Types
 import Security.Claims (AccessClaims)
 import Database (allCodingProblems, findCodingProblemById)

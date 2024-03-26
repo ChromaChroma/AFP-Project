@@ -1,8 +1,9 @@
 module Database where 
 
+-- | Dependency imports
 import Data.List (find)
 import Data.Text (Text)
-
+-- | Project imports
 import qualified Dummy as D
 import Types
 

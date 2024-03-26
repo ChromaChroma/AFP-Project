@@ -1,29 +1,22 @@
-{-# LANGUAGE DataKinds      #-}
-{-# LANGUAGE TypeFamilies   #-}
-{-# LANGUAGE TypeOperators  #-}
-{-# LANGUAGE DeriveGeneric  #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Security.API (api, Api, AuthJwtAccess, AuthJwtRefresh) where
 
-import Control.Exception (throw)
-import Crypto.JWT (JWK)
-import Data.UUID (UUID)
-import GHC.Generics (Generic)
-import Servant (AuthProtect , Capture , Get , JSON , NamedRoutes , Post , ReqBody , err401 , type (:>))
-import Servant.API.Generic (type (:-))
+-- | Dependency imports
+import Control.Exception      (throw)
+import Control.Monad.Catch    (MonadThrow(..))
+import Crypto.JWT             (JWK)
+import Data.Text              (Text)
+import Data.UUID              (UUID)
+import GHC.Generics           (Generic)
+import Servant                (Capture, Get, JSON, NamedRoutes, Post, ReqBody, type (:>), err401, err404)
+import Servant.API.Generic    (type (:-))
 import Servant.Server.Generic (AsServerT)
-
-import Security.App (App)
-import Security.Handlers (LoginRequest , LoginResponse , getUserHandler , loginHandler , refreshTokenHandler)
-import Security.User (User(..))
-import Security.Auth (AuthJwtAccess, AuthJwtRefresh)
-import Security.Claims (AccessClaims)
-
-import  Api.CodeProblem
-import Control.Monad.Catch (MonadThrow(..))
-import Data.Text (Text)
-import Servant (err401, err404)
+-- | Project imports
+import Api.CodeProblem
+import Security.App           (App)
+import Security.Handlers      (LoginRequest , LoginResponse , getUserHandler , loginHandler , refreshTokenHandler)
+import Security.User          (User(..))
+import Security.Auth          (AuthJwtAccess, AuthJwtRefresh)
+import Security.Claims        (AccessClaims)
 
 data Api mode = Api  
   { -- | POST /login

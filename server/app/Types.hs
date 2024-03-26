@@ -1,13 +1,14 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE DeriveAnyClass    #-}
+
 module Types where
 
-import Data.Aeson
-import Data.Text 
-import Data.Time (UTCTime)
-import GHC.Generics (Generic)
-import Data.Typeable (Typeable)
-
+-- | Dependency imports
+import Data.Aeson       (FromJSON, ToJSON)
+import Data.Text        (Text)
+import Data.Time        (UTCTime)
+import GHC.Generics     (Generic)
+import Data.Typeable    (Typeable)
 import Servant.Auth.JWT (FromJWT, ToJWT)
 
 {- Security -}

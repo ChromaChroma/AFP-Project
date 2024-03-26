@@ -13,17 +13,17 @@ module Security.Claims
   , subjectClaim
   ) where
 
-import Control.Lens (Lens', view, (?~))
-import Crypto.JWT (
-  Audience(..), ClaimsSet, HasClaimsSet(..), JWTValidationSettings, NumericDate(..), 
-  claimExp, claimIat, claimSub, defaultJWTValidationSettings, emptyClaimsSet, string)
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Function ((&))
-import Data.String (fromString)
-import Data.Time (UTCTime, addUTCTime)
-import Data.UUID (UUID)
+-- | Dependency imports
+import Control.Lens                (Lens', view, (?~))
+import Crypto.JWT                  (Audience(..), ClaimsSet, HasClaimsSet(..), JWTValidationSettings, NumericDate(..), 
+                                    claimExp, claimIat, claimSub, defaultJWTValidationSettings, emptyClaimsSet, string)
+import Data.Aeson                  (FromJSON, ToJSON)
+import Data.Function               ((&))
+import Data.String                 (fromString)
+import Data.Time                   (UTCTime, addUTCTime)
+import Data.UUID                   (UUID)
 import qualified Data.UUID as Uuid (toString, fromText)
-import GHC.Generics (Generic)
+import GHC.Generics                (Generic)
 
 ----------------------------------------------------
 

@@ -1,14 +1,18 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Dummy where
 
-import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Data.Text (Text)
-
+-- | Dependency imports
+import Data.Time  (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Data.Text  (Text)
+import Data.Maybe (fromJust)
+import Data.UUID  (fromString)
+-- | Project imports
 import Types
 
 {- Dummy Values -}
 
 randomDate = UTCTime (fromGregorian 2018 10 27) (secondsToDiffTime 0)
+
+dummyUUID = fromJust $ fromString "08a2c3d9-b7ec-48e5-8f40-3a942ad01130"
 
 dummyCodingProblems = [
   CodingProblem {

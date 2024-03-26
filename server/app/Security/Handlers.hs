@@ -1,9 +1,6 @@
-{-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE RecordWildCards    #-}
 {-# LANGUAGE ViewPatterns       #-}
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE DeriveGeneric      #-}
-
+{-# LANGUAGE DeriveAnyClass    #-}
 
 module Security.Handlers 
   ( LoginRequest(..)
@@ -13,24 +10,25 @@ module Security.Handlers
   , refreshTokenHandler
   ) where
 
-import Crypto.JWT (SignedJWT)
-import Crypto.JOSE (JWK, encodeCompact)
-import Control.Monad (when, unless)
-import Control.Monad.Catch (MonadThrow(..))
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import Data.Aeson (FromJSON, ToJSON)
+-- | Dependency imports
+import Crypto.JWT                (SignedJWT)
+import Crypto.JOSE               (JWK, encodeCompact)
+import Control.Monad             (when, unless)
+import Control.Monad.Catch       (MonadThrow(..))
+import Control.Monad.IO.Class    (liftIO, MonadIO)
+import Data.Aeson                (FromJSON, ToJSON)
 import Data.ByteString.Lazy.UTF8 (toString)
-import Data.Text (Text, pack)
-import Data.Time (getCurrentTime)
-import Data.UUID (nil, UUID, fromString)
-import GHC.Generics (Generic)
-import Servant (err401, err404)
-  
-import Security.Auth (signToken)
-import Security.User (User(..))
-import Security.Claims (RefreshClaims, accessClaims, refreshClaims, subjectClaim)
+import Data.Text                 (Text, pack)
+import Data.Time                 (getCurrentTime)
+import Data.UUID                 (nil, UUID, fromString)
+import GHC.Generics              (Generic)
+import Servant                   (err401, err404)
+-- | Project imports
+import Dummy                     (dummyUUID)
+import Security.Auth             (signToken)
+import Security.User             (User(..))
+import Security.Claims           (RefreshClaims, accessClaims, refreshClaims, subjectClaim)
 
-import Data.Maybe (fromJust)
 
 data LoginRequest = LoginRequest
   { username :: !Text
@@ -79,5 +77,3 @@ getUserHandler :: MonadThrow m => UUID -> m User
 getUserHandler uid
   | uid /= nil = pure (User "user" "user@mail.com") --TODO change to actual user data 
   | otherwise  = throwM err404
-  
-dummyUUID = fromJust $ fromString "08a2c3d9-b7ec-48e5-8f40-3a942ad01130"

@@ -1,3 +1,6 @@
+-- {-# LANGUAGE PolyKinds         #-}
+-- {-# LANGUAGE FlexibleContexts  #-}
+-- {-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving  #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -7,7 +10,7 @@
 {-# LANGUAGE TypeApplications  #-}
 module Main where
 
--- | Dependency Iimports
+-- | Dependency imports
 import Control.Concurrent       (forkIO)
 import Control.Monad            (forever)
 import Control.Monad.Catch      (MonadThrow, try)
@@ -17,37 +20,12 @@ import Control.Monad.IO.Class   (MonadIO)
 import Network.Wai.Handler.Warp (run)
 import Servant.Server.Generic   (genericServeTWithContext)
 import Servant                  (Context(..), Handler(..))
-
 -- | Project imports
-import Security.API    (api)
-import Security.App    (appToHandler)
-import Security.Auth   (authHandler, generateKey)
-import Security.Claims (AccessClaims, RefreshClaims, accessSettings, refreshSettings)
--- import qualified Security
+import Security.API             (api)
+import Security.App             (appToHandler)
+import Security.Auth            (authHandler, generateKey)
+import Security.Claims          (AccessClaims, RefreshClaims, accessSettings, refreshSettings)
 
-
--- -- | run our server
--- genAuthMain :: IO ()
--- genAuthMain = run 8080 (serveWithContext genAuthAPI genAuthServerContext genAuthServer)
-
--- type API = CP.CodingProblemAPI 
-
--- apiProxy ::Proxy API 
--- apiProxy :: Proxy (API '[JWT])
--- apiProxy = Proxy
-
--- server :: Server API
--- server = CP.handlers
-
--- server :: CookieSettings -> JWTSettings -> Server (API auths)
--- server cs jwts = protected :<|> unprotected cs jwts :<|> CP.handlers
-
-
--- newtype App a = App (IdentityT IO a)
---   deriving (Functor, Applicative, Monad, MonadIO, MonadThrow)
-
--- appToHandler :: App a -> Handler a
--- appToHandler (App app) = (Handler . ExceptT . try . runIdentityT) app
 
 port :: Int
 port = 8080

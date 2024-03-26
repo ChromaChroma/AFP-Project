@@ -1,6 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving  #-}
+
 module Security.App (App(..), appToHandler) where
 
+-- | Dependency imports
 import Control.Monad.Catch (MonadThrow, try)
 import Control.Monad.Except (ExceptT(..))
 import Control.Monad.Identity (IdentityT (..))

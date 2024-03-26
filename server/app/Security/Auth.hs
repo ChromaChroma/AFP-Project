@@ -1,32 +1,23 @@
 {-# LANGUAGE LambdaCase         #-}
-{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE ViewPatterns       #-}
 {-# LANGUAGE TypeApplications   #-}
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE TypeFamilies       #-}
 
 module Security.Auth (AuthJwtAccess, AuthJwtRefresh, authHandler, signToken, generateKey) where
 
-import Control.Monad (guard)
-import Control.Monad.IO.Class (liftIO)
-import Crypto.JOSE
-  ( JWK
-  , KeyMaterialGenParam(OctGenParam)
-  , bestJWSAlg
-  , decodeCompact
-  , genJWK
-  , newJWSHeader
-  , runJOSE
-  )
-import Crypto.JWT (HasClaimsSet, JWTError, JWTValidationSettings, SignedJWT, signJWT, verifyJWT)
-import Data.Aeson (FromJSON, ToJSON)
-import Data.ByteString.UTF8 (ByteString)
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Lazy.UTF8 as LBS
-import Network.Wai (Request, requestHeaders)
-import Servant (AuthProtect)
-import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
-import Security.Claims (AccessClaims, RefreshClaims)
+-- | Dependency imports
+import Control.Monad                              (guard)
+import Control.Monad.IO.Class                     (liftIO)
+import Crypto.JOSE                                (JWK, KeyMaterialGenParam(OctGenParam), 
+                                                   bestJWSAlg, decodeCompact, genJWK, newJWSHeader, runJOSE)
+import Crypto.JWT                                 (HasClaimsSet, JWTError, JWTValidationSettings, SignedJWT, signJWT, verifyJWT)
+import Data.Aeson                                 (FromJSON, ToJSON)
+import Data.ByteString.UTF8                       (ByteString)
+import qualified Data.ByteString.UTF8 as BS       (break, drop, toString)
+import qualified Data.ByteString.Lazy.UTF8 as LBS (fromString)
+import Network.Wai                                (Request, requestHeaders)
+import Servant                                    (AuthProtect)
+import Servant.Server.Experimental.Auth           (AuthHandler, mkAuthHandler, AuthServerData)
+import Security.Claims                            (AccessClaims, RefreshClaims)
 
 
 ----------------------------------------------------
