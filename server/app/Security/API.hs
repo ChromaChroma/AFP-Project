@@ -35,13 +35,6 @@ data Api mode = Api
   }
   deriving Generic
 
--- | POST /coding-problems/:id/attemps (Protected)
--- Target for user to submit attempts
-type SubmitCodingAttempt = 
-    "coding-problems" :> Capture "id" Text  :>"attempts"
-  :> ReqBody '[JSON] AttemptDTO
-  :> Post '[JSON] Text
-
 api :: JWK -> Api (AsServerT App)
 api jwk = Api
   { login   = loginHandler jwk
