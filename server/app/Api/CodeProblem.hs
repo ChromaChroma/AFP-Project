@@ -33,6 +33,9 @@ import Data.Text (Text)
 import Types
 import Security.Auth (AuthJwtAccess)
 
+import Security.App (App)
+import Servant.Server.Generic (AsServerT)
+
 {- Data Transfer Objects -}
 
 data AttemptDTO = AttemptDTO
@@ -44,47 +47,44 @@ data AttemptDTO = AttemptDTO
 -- codingProblemApi :: Proxy CodingProblemAPI
 -- codingProblemApi = Proxy
 
--- -- | GET /coding-problems
--- -- Returns list of coding problems
--- type GetCodingProblems = "coding-problems" 
---   :> Get '[JSON] [CodingProblem]
+-- | GET /coding-problems
+-- Returns list of coding problems
+type GetCodingProblems mode = mode :- "coding-problems" 
+  :> Get '[JSON] [CodingProblem]
 
--- -- | GET /coding-problems/:id
--- -- Returns specific coding problem
--- type GetCodingProblem = "coding-problems" :> Capture "id" Text 
---   :> Get '[JSON] CodingProblem
+-- | GET /coding-problems/:id
+-- Returns specific coding problem
+type GetCodingProblem  mode = mode :- "coding-problems" :> Capture "id" Text 
+  :> Get '[JSON] CodingProblem
 
---   -- | POST /coding-problems/:id/attemps (Protected)
---   -- Target for user to submit attempts
--- type SubmitCodingAttempt = AuthJwtAccess 
---   :> "coding-problems" :> Capture "id" Text  :>"attempts"
---   :> ReqBody '[JSON] AttemptDTO
---   :> Post '[JSON] Text
+  -- | POST /coding-problems/:id/attemps (Protected)
+  -- Target for user to submit attempts
+type SubmitCodingAttempt mode = mode :- AuthJwtAccess 
+  :> "coding-problems" :> Capture "id" Text  :> "attempts"
+  :> ReqBody '[JSON] AttemptDTO
+  :> Post '[JSON] Text
 
--- type CodingProblemAPI = 
---   --      GetCodingProblems
---   -- :<|> GetCodingProblem
---   -- :<|> 
---   SubmitCodingAttempt
+type CodingProblemAPI mode = 
+       GetCodingProblems mode
+  :<|> GetCodingProblem mode
+  :<|> SubmitCodingAttempt mode
 
 {- Handlers -}
 
--- handlers :: Server SubmitCodingAttempt
--- handlers = submitAttempt --getCodingProblems :<|> getCodingProblem :<|> 
+handlers :: CodingProblemAPI (AsServerT App)
+handlers = getCodingProblems :<|> getCodingProblem :<|>  submitAttempt 
   
---   where 
---     -- getCodingProblems = return dummyCodingProblems
+  where 
+    getCodingProblems = pure dummyCodingProblems
 
---     -- getCodingProblem ident (Just _) = return $ case findCodingProblemById ident of 
---     --   Just x -> x 
---     --   Nothing -> error "Could not find CodingProblem with id"
-    
---     -- submitAttempt :: MonadThrow m => Maybe AccessClaims -> AttemptDTO -> m Text
---     -- submitAttempt :: SubmitCodingAttempt
---     submitAttempt (Just _) pId (AttemptDTO code) = case findCodingProblemById pId of 
---                                                       Just x  -> pure "Done"
---                                                       Nothing -> throwM err404
---     submitAttempt _ _ _                             = throwM err401
+    getCodingProblem ident = pure $ case findCodingProblemById ident of 
+      Just x -> x 
+      Nothing -> error "Could not find CodingProblem with id"
+  
+    submitAttempt (Just _) pId (AttemptDTO code) = case findCodingProblemById pId of 
+                                                      Just x  -> pure "Done"
+                                                      Nothing -> throwM err404
+    submitAttempt _ _ _                             = throwM err401
 
 
 

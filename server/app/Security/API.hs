@@ -31,6 +31,7 @@ data Api mode = Api
     -- | POST /refresh
   , refresh :: mode :- "refresh" :> AuthJwtRefresh :> Post '[JSON] LoginResponse
   , secured :: mode :- AuthJwtAccess :> NamedRoutes SecuredRoutes
+  , codingProblems :: CodingProblemAPI mode
   }
   deriving Generic
 
@@ -46,28 +47,21 @@ api jwk = Api
   { login   = loginHandler jwk
   , refresh = refreshTokenHandler jwk
   , secured = securedHandlers
+  , codingProblems = handlers
   }
 
 ----------------------------------------------------
 
-data SecuredRoutes mode = SecuredRoutes
+newtype SecuredRoutes mode = SecuredRoutes
   { -- GET /users/:userId
     getUser :: mode :- "users" :> Capture "userId" UUID :> Get '[JSON] User
-  , codingProblem :: mode :- SubmitCodingAttempt
+  -- , codingProblem :: mode :- SubmitCodingAttempt
   }
   deriving Generic
 
 securedHandlers :: Maybe AccessClaims -> SecuredRoutes (AsServerT App)
 securedHandlers (Just _) = SecuredRoutes { 
-  getUser = getUserHandler, 
-  codingProblem = submit 
+  getUser = getUserHandler
+  -- , codingProblem = submit 
   }
-securedHandlers _        =  error "Not Authed"
-
-
-
-submit :: MonadThrow m => Text -> AttemptDTO -> m Text
-submit pId (AttemptDTO code) = case findCodingProblemById pId of 
-                                                  Just x  -> pure $ "Done"
-                                                  Nothing -> throwM err404
-
+securedHandlers _        =  throw err401
