@@ -40,7 +40,7 @@ data Api mode = Api
 
 api :: JWK -> Api (AsServerT App)
 api jwk = Api
-  { login = loginHandler jwk
+  { login   = loginHandler jwk
   , refresh = refreshTokenHandler jwk
   , secured = securedHandlers
   }

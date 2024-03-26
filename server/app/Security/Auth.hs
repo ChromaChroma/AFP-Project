@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase         #-}
 {-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE ViewPatterns       #-}
+-- {-# LANGUAGE ViewPatterns       #-}
 {-# LANGUAGE TypeApplications       #-}
 
 module Security.Auth (authHandler, signToken, generateKey) where

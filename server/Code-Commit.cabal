@@ -49,15 +49,15 @@ executable Code-Commit
     -- exposed-modules: 
     -- other-extensions:
     build-depends:  base            >=4.17.2.1
-                ,   containers
+                -- ,   containers
                 ,   lens
                 ,   time
+                ,   mtl
 
                 ,   bytestring
                 ,   utf8-string
                 ,   text
 
-                ,   warp
                 ,   aeson 
                 -- ,   aeson-pretty         
                 ,   servant         ^>= 0.20
@@ -65,7 +65,7 @@ executable Code-Commit
                 ,   servant-auth
                 ,   servant-auth-server
                 ,   wai
-                ,   mtl
+                ,   warp
 
                 ,   exceptions
                 ,   jose

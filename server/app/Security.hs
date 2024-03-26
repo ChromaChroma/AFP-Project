@@ -6,7 +6,6 @@
 {-# LANGUAGE DeriveAnyClass    #-}
 module Security where 
 
-
 -- import Servant
 -- import Servant.Auth.Server
 -- import Servant.Server.Generic ()
