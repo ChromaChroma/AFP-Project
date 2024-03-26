@@ -1,19 +1,17 @@
 /* styles.css */
 
-.container {
-    background-color: #d82626;
-    border: 5px solid #0b0bff;
-    /* padding: 20px;
-    margin: 20px;
-    border-radius: 5px; */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #b6b6b6; 
+    padding: 0.5rem 1rem; 
 }
 
-/* styles.css */
-.myDiv {
-    background-color: #f40606;
-    padding: 200px;
-    border-radius: 500px;
-    padding: 200px;
-    margin: 200px;
-    border-radius: 500px;
+.left-content {
+    margin-right: auto; 
+}
+
+.right-content {
+    margin-left: auto; 
 }
