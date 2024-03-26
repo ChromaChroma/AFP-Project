@@ -12,40 +12,36 @@ module Api.CodeProblem
 -- ) 
 where
 
-import Data.Proxy
-import Data.List (find)
-import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Data.Typeable (Typeable)
-
-import Security.Claims (AccessClaims)
-
-import Network.Wai.Handler.Warp
--- import Servant (err401, err404)
-import Servant
-import Servant.Server.Generic ()
-import Servant.API.Generic ((:-))
-
 import Control.Monad.Catch (MonadThrow(..))
 import Data.Aeson (FromJSON, ToJSON)
-import GHC.Generics (Generic)
 import Data.Text (Text)
+import Data.Typeable (Typeable)
+import GHC.Generics (Generic)
+
+import Network.Wai.Handler.Warp
+import Servant
+import Servant.API.Generic ((:-))
+import Security.App (App)
+import Security.Auth (AuthJwtAccess)
+import Servant.Server.Generic (AsServerT)
 
 import Types
-import Security.Auth (AuthJwtAccess)
-
-import Security.App (App)
-import Servant.Server.Generic (AsServerT)
+import Security.Claims (AccessClaims)
+import Database (allCodingProblems, findCodingProblemById)
 
 {- Data Transfer Objects -}
 
-data AttemptDTO = AttemptDTO
-  { code :: !Text
-  } deriving (Show, Eq, Generic, FromJSON, ToJSON)
+newtype AttemptDTO = AttemptDTO { code :: Text } 
+  deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
 {- API -}
 
--- codingProblemApi :: Proxy CodingProblemAPI
--- codingProblemApi = Proxy
+-- | Coding problem API 
+type CodingProblemAPI mode = 
+       GetCodingProblems mode
+  :<|> GetCodingProblem mode
+  :<|> SubmitCodingAttempt mode
+
 
 -- | GET /coding-problems
 -- Returns list of coding problems
@@ -64,18 +60,13 @@ type SubmitCodingAttempt mode = mode :- AuthJwtAccess
   :> ReqBody '[JSON] AttemptDTO
   :> Post '[JSON] Text
 
-type CodingProblemAPI mode = 
-       GetCodingProblems mode
-  :<|> GetCodingProblem mode
-  :<|> SubmitCodingAttempt mode
 
 {- Handlers -}
 
 handlers :: CodingProblemAPI (AsServerT App)
-handlers = getCodingProblems :<|> getCodingProblem :<|>  submitAttempt 
-  
+handlers = getCodingProblems :<|> getCodingProblem :<|> submitAttempt 
   where 
-    getCodingProblems = pure dummyCodingProblems
+    getCodingProblems = pure allCodingProblems
 
     getCodingProblem ident = pure $ case findCodingProblemById ident of 
       Just x -> x 
@@ -85,45 +76,3 @@ handlers = getCodingProblems :<|> getCodingProblem :<|>  submitAttempt
                                                       Just x  -> pure "Done"
                                                       Nothing -> throwM err404
     submitAttempt _ _ _                             = throwM err401
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- getUserHandler :: MonadThrow m => UUID -> m User
--- getUserHandler uid
---   | uid /= nil = pure (User "user" "user@mail.com") --TODO change to actual user data 
---   | otherwise  = throwM err404
-  
-findCodingProblemById :: Text -> Maybe CodingProblem
-findCodingProblemById ident = find ((ident ==) . _id) dummyCodingProblems
-
-
-{- Dummy Values -}
-
-randomDate = UTCTime (fromGregorian 2018 10 27) (secondsToDiffTime 0)
-
-dummyCodingProblems = [
-  CodingProblem {
-    _id = "123",
-    deadline = randomDate,
-    problemTags  = [ "Optimization" ],
-    difficulty   = Intermediate,
-    title        = "Optimize for loop",
-    description  = "Optimize the while loop below. Currently it has a time complexity of O(n^2), but can be O(n).",
-    testCases = [
-      ("Test case 1: Should not crash", "[1,2,3,4,5]", "[2,4,6,8,10]", Visible)
-    ],
-    templateCode = "module OptimizeLoop where \n import Data.Functor \n"
-  }
-  ]

@@ -39,7 +39,8 @@ executable Code-Commit
     main-is:          Main.hs
     other-modules:    Api.CodeProblem
                   ,   Types
-                  ,   Security
+                  ,   Database
+                  ,   Dummy
                   ,   Security.API
                   ,   Security.App
                   ,   Security.Claims
