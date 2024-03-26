@@ -13,7 +13,6 @@ module Security.Handlers
 -- | Dependency imports
 import Crypto.JWT                (SignedJWT)
 import Crypto.JOSE               (JWK, encodeCompact)
-import Control.Monad             (when, unless)
 import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.IO.Class    (liftIO, MonadIO)
 import Data.Aeson                (FromJSON, ToJSON)
