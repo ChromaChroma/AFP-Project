@@ -1,16 +1,22 @@
-module Page.CodeProblem exposing (Model, Msg, init, subscriptions, update, view)
+port module Page.CodeProblem exposing (Model, Msg, init, subscriptions, update, view, openPlainTextTabPort)
 
 import Browser
+import File exposing (File)
 import Html exposing (..)
-import Html.Attributes exposing (attribute, class, disabled, href, id, placeholder, value)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Attributes exposing (attribute, class, disabled, href, id, placeholder, value, type_)
+import Html.Events exposing (onClick, onInput, onSubmit, on)
 import Http
 import Json.Decode as Decode exposing (Decoder, map8, field, string, list)
+import Json.Encode as Encode 
 
 -- MODEL
 
+type alias Model =
+    { state: Status
+    , uploadedSubmission: Maybe String -- File
+    }
 
-type Model 
+type Status 
   = Failure
   | Loading
   | Success CodeProblem
@@ -33,20 +39,48 @@ type alias CodeProblem =
   }
 
 init : (Model, Cmd Msg)
-init = (Loading, getCodeProblem)
+-- init = (Loading, getCodeProblem)
+init = ({ state = Loading
+        , uploadedSubmission = Nothing}, getCodeProblem)
 
 
 -- UPDATE
 
 type Msg
   = GotCodeProblem (Result Http.Error CodeProblem)
+  | Reload
+  | DownloadTemplate String
+  | UploadSubmission
+  | CompletedSubmission (Result Http.Error String)
+  | GotFile String -- File
+
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg _ =
+update msg model =
   case msg of
-    GotCodeProblem (Ok codeProblem) -> (Success codeProblem, Cmd.none)
-    GotCodeProblem (Err _) -> (Failure, Cmd.none)
+    Reload ->
+            ( {model | state = Loading}, getCodeProblem )
+    GotCodeProblem (Ok codeProblem) -> updateState (\_ -> Success codeProblem ) model
+    GotCodeProblem (Err _) ->updateState (\_ -> Failure ) model
+    DownloadTemplate content -> (model, openPlainTextTabPort content)
+    UploadSubmission -> case model.uploadedSubmission of
+                Just file ->
+                    (model, Cmd.none)   -- TODO:handle this case
+                
+                Nothing ->
+                    (model, Cmd.none)
+    CompletedSubmission (Ok response) ->
+            (model, Cmd.none)  -- TODO:handle this case
 
+    CompletedSubmission (Err error) ->
+            (model, Cmd.none) -- TODO:handle this case
+    GotFile file -> ({ model | uploadedSubmission = Just file }, Cmd.none)
+    -- GotCodeProblem (Ok codeProblem) -> (Success codeProblem, Cmd.none)
+    -- GotCodeProblem (Err _) -> (Failure, Cmd.none)
+
+updateState : (Status -> Status) -> Model -> ( Model, Cmd Msg )
+updateState transform model =
+    ( { model | state = transform model.state }, Cmd.none )
 
 -- SUBSCRIPTIONS
 
@@ -59,24 +93,62 @@ view : Model -> { title : String, content : Html Msg }
 view model =
     { title = "Login"
     , content =
-        div [ class "container"]
-            [ h2 [] [ text "Coding Problem:" ]
-            , viewCodeProblem model
-            ]
+        div [ class "container.page"]
+            [ viewCodeProblem model ]
     }
 
 
 viewCodeProblem : Model -> Html Msg
 viewCodeProblem model =
-  case model of
-    Failure         -> div [] [text "Failed to load problem case! "]
+  case model.state of
+    Failure         -> div [] [text "Failed to load problem case! "
+                              , button [ onClick Reload ] [text " Reload" ]
+                              ]
     Loading         -> text "Loading..."
     Success problem ->
-      div []
-        [ h1 [] [ text problem.title ]
-        , p [] [ text problem.description ]
-        ]
+        div [ class "problem-container" ]
+            [ h2 [ class "title" ] [ text problem.title ]
+            , ul [ class "problem-tags" ](List.map tagToHtml problem.problemTags)
+            , p [ class "deadline" ] [ text "Deadline:", text problem.deadline ]
+            , p [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
+            , hr [ class "separator" ] []
+            , p [ class "description" ] [ text problem.description ]
+            , text "Download the template file and use it to implement the specified functions: "
+            , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Download" ]
+            , text "Upload your answer here: "
+            , input
+                [ type_ "file"
+                , onInput GotFile
+                ]
+                []
+              
+            , button [ class "upload-button", onClick UploadSubmission ] [ text "Submit" ]
+            ]
 
+-- Helper functions
+tagToHtml : String -> Html Msg
+tagToHtml tag =
+    li [] [ text tag ]
+
+diffToStr : ProblemDifficulty -> String
+diffToStr difficulty =
+    case difficulty of
+        Easy ->
+            "Easy"
+        Intermediate ->
+            "Intermediate"
+        Difficult ->
+            "Difficult"
+        Extreme ->
+            "Extreme"
+
+-- fileDecoder : Decode.Decoder File
+-- fileDecoder =
+--   Decode.at ["target","file"] File.decoder
+
+
+-- PORT
+port openPlainTextTabPort : String -> Cmd msg
 
 -- HTTP
 
@@ -111,3 +183,11 @@ difficultyDecoder =
                 "Extreme" -> Decode.succeed Extreme
                 _ -> Decode.fail ("Invalid ProblemDifficulty: " ++ str)
         )
+
+submitFile : String -> Cmd Msg
+submitFile file =
+    Http.post
+        { body = Http.jsonBody (Encode.string file)
+         , expect = Http.expectString CompletedSubmission
+        , url = "http://local-host:8000/submission"
+        }

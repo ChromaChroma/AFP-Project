@@ -18,9 +18,13 @@ type Model
 
 init : () -> (Model, Cmd Msg)
 init _ = let (loginModel, loginCmd) =
-                    Login.init
+                    CodeProblem.init
             in
-            (Login loginModel, loginCmd)
+            (CodeProblem loginModel, Cmd.map GotCodeProblemMsg loginCmd)
+-- init _ = let (loginModel, loginCmd) =
+--                     Login.init
+--             in
+--             (Login loginModel, loginCmd)
 
 -- UPDATE
 

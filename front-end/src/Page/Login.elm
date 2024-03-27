@@ -10,6 +10,8 @@ import Http
 import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Json.Encode as Encode 
 import Task exposing (Task)
+import Page.CodeProblem as CodeProblem
+import Debug exposing (log)
 
 -- MODEL
 
@@ -41,7 +43,7 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SubmitLogin ->
+        SubmitLogin -> --(model, Cmd.msg GotCodeProblemMsg CodeProblem.Loading)
             let request = submitRequest model.user
             in ( model, request)
 
@@ -55,7 +57,7 @@ update msg model =
         CompletedLogin (Ok user) ->
             ( model
             , Cmd.none
-            )
+            ) |> Debug.log "New model"
 
         CompletedLogin (Err _) -> (model, Cmd.none)
 

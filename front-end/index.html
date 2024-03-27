@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elm with CSS Example</title>
+    <title>AFP Project - Coding Problems</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
@@ -13,6 +13,12 @@
     <script type="module">
         var app = Elm.Main.init({
             node: document.getElementById('elm-container')
+        });
+
+        // Handle Ports
+        app.ports.openPlainTextTabPort.subscribe(function (content) {
+            var newTab = window.open();
+            newTab.document.body.innerText = content;
         });
     </script>
 </body>

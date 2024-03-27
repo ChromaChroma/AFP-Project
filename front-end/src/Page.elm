@@ -18,8 +18,8 @@ view page {title, content} =
 
 viewHeader : Page -> Html msg
 viewHeader page =
-    nav [ class "navbar" ]
-        [ div [ class "left-content" ] [ text "Coding Problems" ]
+    nav [ class "container" ]
+        [ div [ class "left-content" ] [ a [ class "logo-font"] [text "Coding Problems"] ]
         , div [ class "right-content" ] (viewMenu page)
         ]
 
@@ -34,7 +34,7 @@ viewFooter =
             [ a [ class "logo-font"] [ text "Coding Problems: " ]
             , span [ class "attribution" ]
                 [ text "A web application where code can be commited to solve coding problems, source code "
-                , a [ href "https://github.com/ChromaChroma/AFP-Project/tree/feature_front-end" ] [ text "AFP Project" ]
+                , a [ href "https://github.com/ChromaChroma/AFP-Project/tree/main" ] [ text "AFP Project" ]
                 , text ". The project is connected to an Advanced Functional Programming course on Utrecht University."
                 ]
             ]
