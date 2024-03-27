@@ -1,0 +1,29 @@
+version: "3"
+
+volumes:
+  database:
+    driver: local
+
+services:
+  database:
+    image: postgres:latest
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER:      postgres
+      POSTGRES_PASSWORD:  12345
+      DB_APP_NAME:        CodeCommit
+      DB_APP_USER:        code-commit-user
+      DB_APP_PASS:        code-commit-user-password
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  back-end: 
+    build: 
+      context: ./server
+      args:
+        EXECUTABLE: code-commit-backend-server
+
+  # front-end:
+  #   build:
+  #     context: ./elm # TODO add correct dir

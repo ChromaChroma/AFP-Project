@@ -25,3 +25,6 @@ cabal.project.local~
 # Elm stuff
 elm-stuff/
 elm.js
+
+# Server stuff
+server/temp/**
