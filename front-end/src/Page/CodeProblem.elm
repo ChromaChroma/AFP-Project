@@ -60,20 +60,20 @@ update msg model =
   case msg of
     Reload ->
             ( {model | state = Loading}, getCodeProblem )
-    GotCodeProblem (Ok codeProblem) -> updateState (\_ -> Success codeProblem ) model
-    GotCodeProblem (Err _) ->updateState (\_ -> Failure ) model
+    GotCodeProblem (Ok codeProblem) -> updateState (\_ -> Success codeProblem ) model |> Debug.log "coding problem received"
+    GotCodeProblem (Err tt) -> updateState (\_ -> Failure ) model |> Debug.log ("error: " ++ Debug.toString tt)
     DownloadTemplate content -> (model, openPlainTextTabPort content)
     UploadSubmission -> case model.uploadedSubmission of
                 Just file ->
-                    (model, Cmd.none)   -- TODO:handle this case
+                    (model, submitFile file)   -- TODO:handle this case
                 
                 Nothing ->
                     (model, Cmd.none)
     CompletedSubmission (Ok response) ->
-            (model, Cmd.none)  -- TODO:handle this case
+            (model, Cmd.none) |> Debug.log "yes" -- TODO:handle this case
 
     CompletedSubmission (Err error) ->
-            (model, Cmd.none) -- TODO:handle this case
+            (model, Cmd.none) |> Debug.log "err"-- TODO:handle this case
     GotFile file -> ({ model | uploadedSubmission = Just file }, Cmd.none)
     -- GotCodeProblem (Ok codeProblem) -> (Success codeProblem, Cmd.none)
     -- GotCodeProblem (Err _) -> (Failure, Cmd.none)
@@ -155,7 +155,7 @@ port openPlainTextTabPort : String -> Cmd msg
 getCodeProblem : Cmd Msg
 getCodeProblem =
     Http.get
-    { url = "http://local-host:8000/problems/p1"
+    { url = "http://localhost:8080/coding-problems/123"
     , expect = Http.expectJson GotCodeProblem codeProblemDecoder
     }
 
@@ -193,6 +193,6 @@ submitFile : String -> Cmd Msg
 submitFile file =
     Http.post
         { body = Http.jsonBody (submissionEncoder file)
-         , expect = Http.expectString CompletedSubmission
-        , url = "http://local-host:8000/submission"
+        , expect = Http.expectString CompletedSubmission
+        , url = "http://localhost:8080/coding-problems/123/attempts"
         }

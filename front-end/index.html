@@ -18,7 +18,21 @@
         // Handle Ports
         app.ports.openPlainTextTabPort.subscribe(function (content) {
             var newTab = window.open();
-            newTab.document.body.innerText = content;
+            //newTab.document.body.innerText = content;
+            var preElement = newTab.document.createElement('pre');
+            var codeElement = newTab.document.createElement('code');
+            codeElement.textContent = content;
+            preElement.appendChild(codeElement);
+            newTab.document.body.appendChild(preElement);
+            
+            // Add event listener to select all text when <pre> block is clicked
+            preElement.addEventListener('click', function() {
+                var selection = newTab.getSelection();
+                var range = newTab.document.createRange();
+                range.selectNodeContents(this);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
         });
     </script>
 </body>

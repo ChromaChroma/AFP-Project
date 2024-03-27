@@ -1,7 +1,5 @@
 module Page.Login exposing (Model, Msg, init, subscriptions, update, view)
 
--- import Api exposing (Cred)
--- import Browser.Navigation as Nav
 import Browser exposing (Document)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -24,6 +22,12 @@ type alias User =
   , password : String
   }
 
+type alias Cred =
+    {
+        access: String
+     ,  refresh: String   
+    }
+
 init : (Model, Cmd msg)
 init = 
     ({ user    =
@@ -38,7 +42,7 @@ type Msg
   = SetUsername String
   | SetPassword String
   | SubmitLogin
-  | CompletedLogin (Result Http.Error User)
+  | CompletedLogin (Result Http.Error Cred)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -54,12 +58,12 @@ update msg model =
         SetPassword password ->
             updateCred (\user -> { user | password = password }) model
 
-        CompletedLogin (Ok user) ->
+        CompletedLogin (Ok cred) ->
             ( model
             , Cmd.none
-            ) |> Debug.log "New model"
+            ) |> Debug.log "nicee login"
 
-        CompletedLogin (Err _) -> (model, Cmd.none)
+        CompletedLogin (Err _) -> (model, Cmd.none) |> Debug.log "errr"
 
 
 updateCred : (User -> User) -> Model -> ( Model, Cmd Msg )
@@ -128,47 +132,40 @@ userEncoder user =
         ,("password", Encode.string user.password)
         ]
 
-userDecoder : Decoder User
-userDecoder =
-  Decode.map2 User
-    (Decode.field "username" Decode.string)
-    (Decode.field "password" Decode.string)
+credDecoder : Decoder Cred
+credDecoder =
+  Decode.map2 Cred
+    (Decode.field "access" Decode.string)
+    (Decode.field "refresh" Decode.string)
 
--- handleResponse : Result Http.Error User -> Msg
--- handleResponse result =
---     case result of
---         Ok user ->
---             -- Handle successful response here, perhaps by sending a success message
---             -- For example:
---             ValidationSuccessful user
+-- userDecoder : Decoder User
+-- userDecoder =
+--   Decode.map2 User
+--     (Decode.field "access" Decode.string)
+--     (Decode.field "refresh" Decode.string)
 
---         Err _ ->
---             -- Handle error response here, perhaps by sending an error message
---             -- For example:
---             ValidationFailed "error"
 
 submitRequest : User -> Cmd Msg
 submitRequest user =
-    Http.post
-        { body = Http.jsonBody (userEncoder user)
-         , expect = Http.expectJson CompletedLogin userDecoder
-        , url = "http://local-host:8000/validate"
-        }
+    -- Http.post
+    --     { body = Http.jsonBody (userEncoder user)
+    --      , expect = Http.expectJson CompletedLogin credDecoder
+    --     , url = "http://localhost:8080/login"
+    --     }
+    let
+        hs : List Http.Header
+        hs =
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            ]
 
--- sendRequest : User -> Cmd Msg
--- sendRequest data =
---     postRequest data
---         |> Task.attempt CompletedLogin
-
--- postRequest : User -> Cmd Msg
--- postRequest user =
---     let
---         url = "https://example.com/api/endpoint"
---         body = userEncoder user
---         requestConfig =
---             { expect = Http.expectJson CompletedLogin
---             , body = Http.jsonBody body
---             , url = url
---             }
---     in
---     Http.post requestConfig
+        request =
+            { method = "POST"
+            , headers = hs
+            , url = "http://localhost:8080/login"
+            , body = Http.jsonBody (userEncoder user)
+            , expect = Http.expectJson CompletedLogin credDecoder
+            , timeout = Nothing
+            , tracker = Nothing
+            }
+    in
+    Http.request request
