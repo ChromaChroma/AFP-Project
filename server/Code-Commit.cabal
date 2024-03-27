@@ -48,12 +48,15 @@ executable Code-Commit
       , Security.User
       , Security.Auth
       , Security.Handlers 
+      , System.Checks
+      , System.Processing
     build-depends:  
         base            >=4.17.2.1
       , containers
       , lens
       , time
       , mtl
+      , deepseq
       , uuid
 
       -- | Text dependencies

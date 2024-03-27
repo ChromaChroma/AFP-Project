@@ -1,7 +1,11 @@
-module System.Checks (ghcCheck) where
+module System.Checks (
+  -- compileFile
+-- ,
+ ghcCheck
+) where
 
-import System.Process (readProcessWithExitCode)
 import System.Exit    (ExitCode(..))
+import System.Process (readProcessWithExitCode)
 
 -- | Checks if GHC version is correctly installed on system
 ghcCheck :: String -> IO Bool
@@ -25,4 +29,5 @@ failMsg msg = putStrLn msg >> pure False
 
 -- | Logs message and returns IO True
 succMsg :: String -> IO Bool
-succMsg msg = putStrLn msg >> pure True
+succMsg msg = putStrLn msg >> pure True 
+

@@ -29,57 +29,6 @@ import System.Checks            (ghcCheck)
 port :: Int
 port = 8080
 
--- -- | Runs shell command and expects succesful termination
--- runCmd :: FilePath -> [String] -> String -> IO () 
--- runCmd cmd args inp = do 
---   (exitCode, output, err) <- readProcessWithExitCode cmd args inp
---   case exitCode of 
---     ExitFailure _ -> putStrLn $ "Command `" ++ cmd ++ " " ++ foldr (\ x acc -> acc ++ " " ++ x) "" args ++ inp ++ "` failed. " ++ err
---     ExitSuccess   -> pure ()
---   -- guard (exitCode == ExitSuccess)
-
--- runn ::FilePath -> [String] -> String -> IO ()
--- runn cmd args inp = do
---     res <- try $ readProcessWithExitCode cmd args inp
---     case res of
---         Left (SomeException _)        -> putStrLn "SoemExep. Ignoring..."
---         Right (exitCode, output, err) -> case exitCode of 
---                                           ExitFailure _ -> putStrLn $ "Command `" ++ cmd ++ " " ++ foldr (\ x acc -> acc ++ " " ++ x) "" args ++ inp ++ "` failed. " ++ err
---                                           ExitSuccess   -> pure ()
-
-runWait :: String -> IO ExitCode
-runWait cmnd = runCommand cmnd >>= waitForProcess  
-  
-
-compileFile :: Text -> IO ()
-compileFile code = do 
-  -- now <- liftIO getCurrentTime
-  -- | Temp dir of user
-  let tempDir = "temp/" ++ show dummyUUID 
- 
-  -- | Clean temp dir
-  runWait ("rm -r " ++ tempDir)
-  
-  -- | Create temp dir
-  runWait ("mkdir -p " ++ tempDir)
-  -- (exitCode, output, err) <- readProcessWithExitCode "mkdir" [] tempDir
-  -- guard (exitCode == ExitSuccess)
-
-  -- -- | Create file to be compiled
-  runWait ("echo " ++ show code ++ " >> " ++ tempDir ++ "/Main.hs")
-
-  -- | Compile file to same dir/dist (thus check validity of code)
-  
-  -- | run file as test/on test cases
-
-  -- | Build up result of code run
-
-  -- | Remove temp dir
-  -- runWait ("rm -r " ++ tempDir)
-
-  -- | Return result of run
-  putStrLn "Done Compiling"
-
 
 main :: IO ()
 main = do
