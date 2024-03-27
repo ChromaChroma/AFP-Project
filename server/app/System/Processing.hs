@@ -47,7 +47,7 @@ runProcess proccess = do
     ExitFailure _ -> Left <$> hGetContents errHandle
 
 -- | Takes the result of a process attempt and creates a 409 response with the error message contained in the 'Left' value
-throwIfError :: IO (Either String a) -> IO ()
+throwIfError :: MonadThrow m => m (Either String a) -> m ()
 throwIfError io = io >>= \case
   Left err -> throwM err409 {errBody = UTF8.fromString err }
   _        -> pure ()
