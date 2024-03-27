@@ -1,0 +1,124 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #FFCD00; 
+    padding: 0.5rem 1rem; 
+}
+
+.left-content {
+    margin-right: auto; 
+}
+
+.right-content {
+    margin-left: auto; 
+}
+
+.logo-font {
+    font-family: 'Arial', sans-serif; 
+    font-size: 36px; 
+    font-weight: bold; 
+    letter-spacing: 2px; 
+    text-transform: uppercase; 
+    color: #333; 
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); 
+}
+
+.logo-text-small {
+    font-size: 14px; 
+}
+
+.logo-font {
+    font-family: titillium web,sans-serif
+}
+
+footer {
+    background: #f3f3f3;
+    margin-top: 3rem;
+    padding: 1rem 0;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+footer .logo-font {
+    vertical-align: middle
+}
+
+footer .attribution {
+    vertical-align: middle;
+    margin-left: 10px;
+    font-size: .8rem;
+    color: #bbb;
+    font-weight: 300
+}
+
+.container {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 15px;
+    padding-right: 15px
+}
+
+.logo-font {
+    font-family: titillium web,sans-serif
+}
+
+.container.page {
+    margin-top: 1.5rem
+}
+
+.problem-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.title {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.problem-tags {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.problem-tags li {
+    display: inline-block;
+    margin-right: 10px;
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.deadline {
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.separator {
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+.description {
+    margin-bottom: 20px;
+}
+
+.download-button,
+.upload-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.download-button:hover,
+.upload-button:hover {
+    background-color: #0056b3;
+}
