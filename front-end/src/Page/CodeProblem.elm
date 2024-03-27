@@ -6,7 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (attribute, class, disabled, href, id, placeholder, value, type_)
 import Html.Events exposing (onClick, onInput, onSubmit, on)
 import Http
-import Json.Decode as Decode exposing (Decoder, map8, field, string, list)
+import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
 
 -- MODEL
@@ -34,7 +34,7 @@ type alias CodeProblem =
   , difficulty   : ProblemDifficulty
   , title        : String
   , description  : String
-  , testCases    : List String
+--   , testCases    : List String
   , templateCode : String
   }
 
@@ -161,15 +161,15 @@ getCodeProblem =
 
 codeProblemDecoder : Decoder CodeProblem
 codeProblemDecoder =
-  Decode.map8 CodeProblem -- map8 CodeProblem
-    (field "id" string)
+  Decode.map7 CodeProblem
+    (field "_id" string)
     (field "deadline" string)
     (field "problemTags" (list string))
     (field "difficulty" difficultyDecoder)
     (field "title" string)
     (field "description" string)
-    (field "testCases" (list string))
     (field "templateCode" string)
+    -- (field "testCases" (list string))
 
 -- Decoder for ProblemDifficulty
 difficultyDecoder : Decoder ProblemDifficulty
@@ -184,10 +184,15 @@ difficultyDecoder =
                 _ -> Decode.fail ("Invalid ProblemDifficulty: " ++ str)
         )
 
+submissionEncoder : String -> Encode.Value
+submissionEncoder file =
+    Encode.object 
+        [("code", Encode.string file)]
+
 submitFile : String -> Cmd Msg
 submitFile file =
     Http.post
-        { body = Http.jsonBody (Encode.string file)
+        { body = Http.jsonBody (submissionEncoder file)
          , expect = Http.expectString CompletedSubmission
         , url = "http://local-host:8000/submission"
         }
