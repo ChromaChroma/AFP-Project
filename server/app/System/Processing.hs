@@ -1,18 +1,92 @@
+{-# LANGUAGE LambdaCase #-}
+
 module System.Processing where 
 
-
 -- | Dependency imports
-import Control.Monad          (liftM)
+import Control.Monad          (guard, liftM)
+import Control.Monad.Catch    (MonadThrow(..))
 import Control.Monad.IO.Class (liftIO)
-import Data.Text              (Text)
+import qualified Data.ByteString.Lazy.UTF8 as UTF8 (fromString)
+import Data.Text              (Text, unpack)
+import Servant
 import System.Exit            (ExitCode(..))
-import System.IO.Unsafe       (unsafePerformIO)
-import System.Process         (runCommand, waitForProcess)
+import System.IO              (hGetContents)
+import System.Process         (StdStream(..), CreateProcess(..), runCommand, waitForProcess, readProcessWithExitCode, proc, createProcess)
 import System.Directory       (createDirectoryIfMissing, removeDirectoryRecursive)
 import Control.Exception      (ErrorCall, handle)
 import System.IO.Error        (catchIOError)
 -- | Project imports
 import Dummy                  (dummyUUID)
+
+ignoreIOFail :: IO () -> IO ()
+ignoreIOFail = handle handlerError . flip catchIOError handlIOError
+  where
+    -- | Handles IOExceptions thrown
+    handlIOError :: IOError -> IO ()
+    handlIOError _ = pure ()
+    -- | Handles 'error' calls thrown
+    handlerError :: ErrorCall -> IO ()
+    handlerError _ = pure ()
+
+test :: IO ()
+test = compProcess exampleMain
+
+exampleMain :: Text
+exampleMain = "module Main where \n\nmain :: IO ()\nmain = do \n  putStrLn \"Hello World\""
+
+-- | Function to compile a Haskell file using GHC
+runProcess :: CreateProcess -> IO (Either String ExitCode)
+runProcess proccess = do 
+  (_, _, Just errHandle, handle) <- createProcess proccess { std_err = CreatePipe }
+  exitCode <- waitForProcess handle
+  case exitCode of 
+    ExitSuccess   -> pure $ Right ExitSuccess
+    ExitFailure _ -> Left <$> hGetContents errHandle
+
+throwIfError :: Either String a -> IO ()
+throwIfError = \case
+  Left err -> throwM err409 {errBody = UTF8.fromString err }
+  _        -> pure ()
+
+compProcess :: Text -> IO () 
+compProcess code = 
+  let tempDir = "temp/" ++ show dummyUUID -- Temp dir of user
+      tempDirMain = tempDir ++ "/Main.hs" 
+  in do
+  -- | Clean removes temp dir
+  ignoreIOFail $ removeDirectoryRecursive tempDir
+
+  -- | Creates temp dir
+  createDirectoryIfMissing True tempDir
+
+  -- | Create Main file for compilation
+  writeFile tempDirMain (unpack code)
+
+  -- | Compile file to same dir/dist (thus check validity of code)
+  throwIfError <$> runProcess (proc "ghc" [tempDirMain])
+  
+  -- | Confirm working executable
+  throwIfError <$> runProcess (proc (tempDir ++ "/main") [])
+
+  -- | run file as test/on test cases
+      -- Get testcases 
+      -- Run over all of them / input them as list of cases
+      
+  -- | Build up result of code run
+
+  -- | Remove temp dir
+  -- runWait ("rm -r " ++ tempDir)
+
+  -- | Return result of run
+
+  putStrLn "Done"
+
+
+
+
+
+{-
+
 
 type CommandMonadIO a b = CommandMonad a (IO b)
 
@@ -114,66 +188,55 @@ gets error that dir it wants to make file in does not exist.
 -}
 
 
+-- good :: CommandMonadIO ExitCode ExitCode
+-- good = Command $ pure $ ExitFailure 1
+
+
+-- dooo2 :: IO ()
+-- dooo2 = do 
+--   case updateFail good of 
+--     Command x -> x >>= print
+--     Failure e -> error "Some unexpected failure"
+
+
+-- dooo :: IO ()
+-- dooo = do 
+--   case compileFile "text c" of 
+--     Command x -> x >>= putStrLn . ("tt" ++) . show 
+--     Failure e -> error "Some unexpected failure"
+
+
+
+
+-}
 
 
 
 
 
-good :: CommandMonadIO ExitCode ExitCode
-good = Command $ pure $ ExitFailure 1
-
-
-dooo2 :: IO ()
-dooo2 = do 
-  case updateFail good of 
-    Command x -> x >>= print
-    Failure e -> error "Some unexpected failure"
-
-
-dooo :: IO ()
-dooo = do 
-  case compileFile "text c" of 
-    Command x -> x >>= putStrLn . ("tt" ++) . show 
-    Failure e -> error "Some unexpected failure"
-
-
-ignoreIOFail :: IO () -> IO ()
-ignoreIOFail = handle handlerError . flip catchIOError handlIOError
-  where
-    -- | Handles IOExceptions thrown
-    handlIOError :: IOError -> IO ()
-    handlIOError _ = pure ()
-    -- | Handles 'error' calls thrown
-    handlerError :: ErrorCall -> IO ()
-    handlerError _ = pure ()
-
-comp :: Text -> IO () 
-comp code = 
-  let tempDir = "temp/" ++ show dummyUUID -- Temp dir of user
-      tempDirMain = tempDir ++ "/Main.hs" 
-  in do
-  ignoreIOFail $ removeDirectoryRecursive tempDir
-  createDirectoryIfMissing True tempDir
-
-  writeFile tempDirMain (show code)
-  putStrLn "Done"
 
 
 
 
-compileFile :: Text -> CommandMonadIO ExitCode ExitCode
-compileFile code = 
-  let tempDir = "temp/" ++ show dummyUUID -- Temp dir of user
-  in do 
-  await True  ("rm -r " ++ tempDir)
-  await False ("install -Dv /dev/null " ++ tempDir ++ "/Main.hs" 
-              ++ " && echo " ++ show code ++ " > " ++ tempDir ++ "/Main.hs")
-  -- await False ("mkdir -p " ++ tempDir)
-  -- await False ("echo " ++ show code ++ " > " ++ tempDir ++ "/Main.hs")
 
-  -- Gets called (after deleting dir) before creation is done. 
-  -- Misshien dit gebruiken: https://stackoverflow.com/questions/48977455/how-do-i-force-evaluation-of-an-io-action-within-unsafeperformio
-  await False ("cat " ++ tempDir ++ "/Main.hs")
+
+
+
+
+
+-- compileFile :: Text -> CommandMonadIO ExitCode ExitCode
+-- compileFile code = 
+--   let tempDir = "temp/" ++ show dummyUUID -- Temp dir of user
+--   in do 
+--   await True  ("rm -r " ++ tempDir)
+--   await False ("install -Dv /dev/null " ++ tempDir ++ "/Main.hs" 
+--               ++ " && echo " ++ show code ++ " > " ++ tempDir ++ "/Main.hs")
+--   -- await False ("mkdir -p " ++ tempDir)
+--   -- await False ("echo " ++ show code ++ " > " ++ tempDir ++ "/Main.hs")
+
+--   -- Gets called (after deleting dir) before creation is done. 
+--   -- Misshien dit gebruiken: https://stackoverflow.com/questions/48977455/how-do-i-force-evaluation-of-an-io-action-within-unsafeperformio
+--   await False ("cat " ++ tempDir ++ "/Main.hs")
 
   
   -- await False("(rm -r " ++ tempDir ++ "|| true )" ++ " && mkdir -p " ++ tempDir ++ " && echo " ++ show code ++ " > " ++ tempDir ++ "/Main.hs")
