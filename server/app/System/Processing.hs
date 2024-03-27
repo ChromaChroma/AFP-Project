@@ -2,15 +2,17 @@ module System.Processing where
 
 
 -- | Dependency imports
-import Control.Monad  (liftM)
-import Control.Monad.IO.Class   (liftIO)
-import Data.Text      (Text)
-import System.Exit    (ExitCode(..))
-import System.IO.Unsafe (unsafePerformIO)
-import System.Process (runCommand, waitForProcess)
+import Control.Monad          (liftM)
+import Control.Monad.IO.Class (liftIO)
+import Data.Text              (Text)
+import System.Exit            (ExitCode(..))
+import System.IO.Unsafe       (unsafePerformIO)
+import System.Process         (runCommand, waitForProcess)
+import System.Directory       (createDirectoryIfMissing, removeDirectoryRecursive)
+import Control.Exception      (ErrorCall, handle)
+import System.IO.Error        (catchIOError)
 -- | Project imports
-import Dummy          (dummyUUID)
-
+import Dummy                  (dummyUUID)
 
 type CommandMonadIO a b = CommandMonad a (IO b)
 
@@ -133,6 +135,30 @@ dooo = do
   case compileFile "text c" of 
     Command x -> x >>= putStrLn . ("tt" ++) . show 
     Failure e -> error "Some unexpected failure"
+
+
+ignoreIOFail :: IO () -> IO ()
+ignoreIOFail = handle handlerError . flip catchIOError handlIOError
+  where
+    -- | Handles IOExceptions thrown
+    handlIOError :: IOError -> IO ()
+    handlIOError _ = pure ()
+    -- | Handles 'error' calls thrown
+    handlerError :: ErrorCall -> IO ()
+    handlerError _ = pure ()
+
+comp :: Text -> IO () 
+comp code = 
+  let tempDir = "temp/" ++ show dummyUUID -- Temp dir of user
+      tempDirMain = tempDir ++ "/Main.hs" 
+  in do
+  ignoreIOFail $ removeDirectoryRecursive tempDir
+  createDirectoryIfMissing True tempDir
+
+  writeFile tempDirMain (show code)
+  putStrLn "Done"
+
+
 
 
 compileFile :: Text -> CommandMonadIO ExitCode ExitCode

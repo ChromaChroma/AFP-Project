@@ -81,6 +81,8 @@ executable Code-Commit
 
       -- | Dependency to allow system interaction
       , process
+      , directory
+      , filepath
     default-extensions: 
         DataKinds
       , DeriveGeneric
