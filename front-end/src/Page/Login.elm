@@ -155,7 +155,9 @@ submitRequest user =
     let
         hs : List Http.Header
         hs =
-            [ Http.header "Access-Control-Allow-Origin" "*"
+            [ Http.header "Access-Control-Allow-Origin" "*",
+              Http.header "Accept" "*/*",
+              Http.header "Authorization" "Bearer eyJhbGciOiJIUzUxMiJ9.eyJhdWQiOiJhY2Nlc3MiLCJleHAiOjEuNzExNTYwMjc2Mjk1MjM3NTZlOSwiaWF0IjoxLjcxMTU1OTM3NjI5NTIzNzU2ZTksInN1YiI6IjA4YTJjM2Q5LWI3ZWMtNDhlNS04ZjQwLTNhOTQyYWQwMTEzMCJ9.5ddVeYFeCJ9KaUrpUVc6iqx1r30viqLqqZvGEUCi7GneW0UEO5oYLNF4c-jkRV5u6cM8HyyE0AOuv10fadrZWA"
             ]
 
         request =
