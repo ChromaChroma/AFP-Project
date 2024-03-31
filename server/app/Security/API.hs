@@ -20,11 +20,11 @@ import Security.Claims        (AccessClaims)
 
 data Api mode = Api  
   { -- | POST /login
-    login  :: mode :- "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
+    login           :: mode :- "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
     -- | POST /refresh
-  , refresh :: mode :- "refresh" :> AuthJwtRefresh :> Post '[JSON] LoginResponse
-  , secured :: mode :- AuthJwtAccess :> NamedRoutes SecuredRoutes
-  , codingProblems :: CodingProblemAPI mode
+  , refresh         :: mode :- "refresh" :> AuthJwtRefresh :> Post '[JSON] LoginResponse
+  , secured         :: mode :- AuthJwtAccess :> NamedRoutes SecuredRoutes
+  , codingProblems  :: CodingProblemAPI mode
   }
   deriving Generic
 
