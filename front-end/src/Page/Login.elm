@@ -1,20 +1,26 @@
 module Page.Login exposing (Model, Msg, init, subscriptions, update, view)
 
-import Browser exposing (Document)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Browser                           exposing (Document)
+import Html                              exposing (..)
+import Html.Attributes                   exposing (..)
+import Html.Events                       exposing (..)
+import Debug                             exposing (log)
+import Json.Decode        as Decode      exposing (Decoder, decodeString, field, string)
+import Task                              exposing (Task)
 import Http
-import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
-import Json.Encode as Encode 
-import Task exposing (Task)
-import Page.CodeProblem as CodeProblem
-import Debug exposing (log)
+import Browser.Navigation as Nav
+import Json.Encode        as Encode 
+import Page.CodeProblem   as CodeProblem
+import Route                             exposing (pushUrl)
+import Error                             exposing (errorToStr)
+
+-- TODO: fix routing, handled access correctly (Using session) & refreshing of token, show output of code, abstract Http with endpoints, update css styling, register page, choce codeproblem page
 
 -- MODEL
 
 type alias Model =
-  { user: User
+  { navKey : Nav.Key 
+  , user   : User
   }
 
 type alias User =
@@ -23,24 +29,26 @@ type alias User =
   }
 
 type alias Cred =
-    {
-        access: String
-     ,  refresh: String   
+    { access  : String
+    , refresh : String   
     }
 
-init : (Model, Cmd msg)
-init = 
-    ({ user    =
+init : Nav.Key -> (Model, Cmd msg)
+init navKey = 
+    ({ navKey = navKey
+     , user   =
             { username = ""
             , password = ""
             }
-     }, Cmd.none)
+     }
+    , Cmd.none
+    )
 
 -- UPDATE
 
 type Msg
-  = SetUsername String
-  | SetPassword String
+  = SetUsername    String
+  | SetPassword    String
   | SubmitLogin
   | CompletedLogin (Result Http.Error Cred)
 
@@ -48,8 +56,13 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SubmitLogin -> --(model, Cmd.msg GotCodeProblemMsg CodeProblem.Loading)
-            let request = submitRequest model.user
-            in ( model, request)
+            let 
+                -- request = submitRequest model.user
+                request =  Route.pushUrl Route.CodeProblem model.navKey-- tmp just to test routing
+            in 
+            ( model
+            , request
+            )
 
 
         SetUsername username ->
@@ -63,12 +76,14 @@ update msg model =
             , Cmd.none
             ) |> Debug.log "nicee login"
 
-        CompletedLogin (Err _) -> (model, Cmd.none) |> Debug.log "errr"
+        CompletedLogin (Err errorMsg) -> (model, Cmd.none) |> Debug.log ("login error: " ++ (errorToStr errorMsg))
 
 
 updateCred : (User -> User) -> Model -> ( Model, Cmd Msg )
 updateCred transform model =
-    ( { model | user = transform model.user }, Cmd.none )
+    ( { model | user = transform model.user }
+    , Cmd.none
+    )
 
 
 -- SUBSCRIPTIONS
@@ -80,7 +95,7 @@ subscriptions model = Sub.none
 
 view : Model -> { title : String, content : Html Msg }
 view model =
-    { title = "Login"
+    { title   = "Login"
     , content =
         div [ class "cred-page" ]
             [ div [ class "container page" ]

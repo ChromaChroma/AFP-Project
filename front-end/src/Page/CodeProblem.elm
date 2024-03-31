@@ -1,19 +1,20 @@
 port module Page.CodeProblem exposing (Model, Msg, init, subscriptions, update, view, openPlainTextTabPort)
 
 import Browser
-import File exposing (File)
-import Html exposing (..)
-import Html.Attributes exposing (attribute, class, disabled, href, id, placeholder, value, type_)
-import Html.Events exposing (onClick, onInput, onSubmit, on)
+import File                  exposing (File)
+import Html                  exposing (..)
+import Html.Attributes       exposing (attribute, class, disabled, href, id, placeholder, value, type_)
+import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
 import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
 
+
 -- MODEL
 
 type alias Model =
-    { state: Status
-    , uploadedSubmission: Maybe String -- File
+    { state              : Status
+    , uploadedSubmission : Maybe String -- File
     }
 
 type Status 
@@ -40,47 +41,71 @@ type alias CodeProblem =
 
 init : (Model, Cmd Msg)
 -- init = (Loading, getCodeProblem)
-init = ({ state = Loading
-        , uploadedSubmission = Nothing}, getCodeProblem)
+init = ( { state              = Loading
+         , uploadedSubmission = Nothing
+         }
+       , getCodeProblem
+       )
 
 
 -- UPDATE
 
 type Msg
-  = GotCodeProblem (Result Http.Error CodeProblem)
+  = GotCodeProblem      (Result Http.Error CodeProblem)
   | Reload
-  | DownloadTemplate String
+  | DownloadTemplate    String
   | UploadSubmission
   | CompletedSubmission (Result Http.Error String)
-  | GotFile String -- File
+  | GotFile             String -- File
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Reload ->
-            ( {model | state = Loading}, getCodeProblem )
-    GotCodeProblem (Ok codeProblem) -> updateState (\_ -> Success codeProblem ) model |> Debug.log "coding problem received"
-    GotCodeProblem (Err tt) -> updateState (\_ -> Failure ) model |> Debug.log ("error: " ++ Debug.toString tt)
-    DownloadTemplate content -> (model, openPlainTextTabPort content)
-    UploadSubmission -> case model.uploadedSubmission of
-                Just file ->
-                    (model, submitFile file)   -- TODO:handle this case
-                
-                Nothing ->
-                    (model, Cmd.none)
-    CompletedSubmission (Ok response) ->
-            (model, Cmd.none) |> Debug.log "yes" -- TODO:handle this case
+    Reload                           ->
+        ( { model | state = Loading }
+        , getCodeProblem 
+        )
 
-    CompletedSubmission (Err error) ->
-            (model, Cmd.none) |> Debug.log "err"-- TODO:handle this case
-    GotFile file -> ({ model | uploadedSubmission = Just file }, Cmd.none)
+    GotCodeProblem (Ok codeProblem)  -> 
+        updateState (\_ -> Success codeProblem ) model 
+            |> Debug.log "coding problem received"
+
+    GotCodeProblem (Err tt)          -> 
+        updateState (\_ -> Failure ) model 
+        |> Debug.log ("error: " ++ Debug.toString tt)
+
+    DownloadTemplate content         -> 
+        ( model
+        , openPlainTextTabPort content
+        )
+    UploadSubmission                 -> 
+        case model.uploadedSubmission of
+            Just file ->
+                ( model, submitFile file )   -- TODO:handle this case
+            
+            Nothing   ->
+                ( model, Cmd.none )
+
+    CompletedSubmission (Ok response) ->
+        ( model, Cmd.none ) 
+            |> Debug.log "yes" -- TODO:handle this case
+
+    CompletedSubmission (Err error)   ->
+        ( model, Cmd.none ) |> Debug.log "err"-- TODO:handle this case
+
+    GotFile file                      -> 
+        ( { model | uploadedSubmission = Just file }
+        , Cmd.none
+        )
     -- GotCodeProblem (Ok codeProblem) -> (Success codeProblem, Cmd.none)
     -- GotCodeProblem (Err _) -> (Failure, Cmd.none)
 
 updateState : (Status -> Status) -> Model -> ( Model, Cmd Msg )
 updateState transform model =
-    ( { model | state = transform model.state }, Cmd.none )
+    ( { model | state = transform model.state }
+    , Cmd.none 
+    )
 
 -- SUBSCRIPTIONS
 
@@ -91,7 +116,7 @@ subscriptions _ = Sub.none
 
 view : Model -> { title : String, content : Html Msg }
 view model =
-    { title = "Login"
+    { title   = "CodeProblem"
     , content =
         div [ class "container.page"]
             [ viewCodeProblem model ]
@@ -101,18 +126,23 @@ view model =
 viewCodeProblem : Model -> Html Msg
 viewCodeProblem model =
   case model.state of
-    Failure         -> div [] [text "Failed to load problem case! "
-                              , button [ onClick Reload ] [text " Reload" ]
-                              ]
-    Loading         -> text "Loading..."
+    Failure         -> 
+        div [] [ text "Failed to load problem case! "
+               , button [ onClick Reload ] 
+                        [ text " Reload" ]
+               ]
+
+    Loading         -> 
+        text "Loading..."
+
     Success problem ->
         div [ class "problem-container" ]
             [ h2 [ class "title" ] [ text problem.title ]
-            , ul [ class "problem-tags" ](List.map tagToHtml problem.problemTags)
-            , p [ class "deadline" ] [ text "Deadline:", text problem.deadline ]
-            , p [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
+            , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
+            , p  [ class "deadline" ] [ text "Deadline:", text problem.deadline ]
+            , p  [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
             , hr [ class "separator" ] []
-            , p [ class "description" ] [ text problem.description ]
+            , p  [ class "description" ] [ text problem.description ]
             , text "Download the template file and use it to implement the specified functions: "
             , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Download" ]
             , text "Upload your answer here: "
@@ -121,7 +151,6 @@ viewCodeProblem model =
                 , onInput GotFile
                 ]
                 []
-              
             , button [ class "upload-button", onClick UploadSubmission ] [ text "Submit" ]
             ]
 
@@ -133,13 +162,16 @@ tagToHtml tag =
 diffToStr : ProblemDifficulty -> String
 diffToStr difficulty =
     case difficulty of
-        Easy ->
+        Easy         ->
             "Easy"
+
         Intermediate ->
             "Intermediate"
-        Difficult ->
+
+        Difficult    ->
             "Difficult"
-        Extreme ->
+
+        Extreme      ->
             "Extreme"
 
 -- fileDecoder : Decode.Decoder File

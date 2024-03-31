@@ -1,14 +1,20 @@
 module Page exposing (Page(..),view)
 
-import Browser exposing (Document)
-import Html exposing (..)
-import Html.Attributes exposing (class, classList, href, style)
-import Html.Events exposing (onClick)
+import Browser                         exposing (Document)
+import Html                            exposing (..)
+import Html.Attributes                 exposing (class, classList, href, style)
+import Html.Events                     exposing (onClick)
+import Page.Login       as Login
+import Page.CodeProblem as CodeProblem
+
 
 type Page 
-    = Login
-    | Register
-    | CodeProblem
+    = NotFound
+    | Login       Login.Model
+    | CodeProblem CodeProblem.Model
+
+
+-- VIEW
 
 view : Page -> { title : String, content : Html msg } -> Document msg
 view page {title, content} =
