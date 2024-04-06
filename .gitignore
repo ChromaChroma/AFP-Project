@@ -22,6 +22,8 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 
+.vscode
+
 # Elm stuff
 elm-stuff/
 elm.js

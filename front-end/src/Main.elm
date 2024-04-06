@@ -12,14 +12,14 @@ import Page.CodeProblem   as CodeProblem
 import Page.NotFound      as NotFound
 import Json.Decode        as Decode      exposing (Value)
 import Route                             exposing (Route)
-
+import Session                           exposing (Session, getNavKey)
 
 -- MODEL
 
 type alias Model =
-    { route  : Route
-    , page   : Page
-    , navKey : Nav.Key
+    { route   : Route
+    , page    : Page
+    , session : Session
     }
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -28,7 +28,7 @@ init _ url navKey =
         model = 
             { route  = Route.parseUrl url
             , page   = NotFound
-            , navKey = navKey
+            , session = Session.Unauthenticated navKey
             }
     in
     currentPage ( model, Cmd.none)
@@ -53,7 +53,7 @@ currentPage ( model, cmds ) =
                 Route.Login        ->
                     let
                         ( pageModel, pageCmds ) =
-                            Login.init model.navKey
+                            Login.init model.session
                     in
                     ( Login pageModel
                     , Cmd.map GotLoginMsg pageCmds 
@@ -62,7 +62,7 @@ currentPage ( model, cmds ) =
                 Route.CodeProblem  ->
                     let
                         ( pageModel, pageCmds ) =
-                            CodeProblem.init
+                            CodeProblem.init model.session
                     in
                     ( CodeProblem pageModel
                     , Cmd.map GotCodeProblemMsg pageCmds 
@@ -106,7 +106,7 @@ update msg model =
             case urlRequest of
                 Browser.Internal url ->
                     ( model
-                    , Nav.pushUrl model.navKey (Url.toString url) 
+                    , Nav.pushUrl (getNavKey model.session) (Url.toString url) 
                     )
 
                 Browser.External url ->

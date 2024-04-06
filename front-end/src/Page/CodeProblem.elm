@@ -8,12 +8,14 @@ import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
 import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
+import Session               exposing (Session)
 
 
 -- MODEL
 
 type alias Model =
-    { state              : Status
+    { session            : Session
+    , state              : Status
     , uploadedSubmission : Maybe String -- File
     }
 
@@ -39,13 +41,14 @@ type alias CodeProblem =
   , templateCode : String
   }
 
-init : (Model, Cmd Msg)
+init : Session -> (Model, Cmd Msg)
 -- init = (Loading, getCodeProblem)
-init = ( { state              = Loading
-         , uploadedSubmission = Nothing
-         }
-       , getCodeProblem
-       )
+init session = ( { session            = session
+                 , state              = Loading
+                 , uploadedSubmission = Nothing
+                 }
+               , getCodeProblem
+               )
 
 
 -- UPDATE
@@ -143,8 +146,8 @@ viewCodeProblem model =
             , p  [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
             , hr [ class "separator" ] []
             , p  [ class "description" ] [ text problem.description ]
-            , text "Download the template file and use it to implement the specified functions: "
-            , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Download" ]
+            , hr [ class "separator" ] []
+            , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Template" ]
             , text "Upload your answer here: "
             , input
                 [ type_ "file"

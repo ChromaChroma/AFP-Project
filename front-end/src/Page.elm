@@ -6,7 +6,7 @@ import Html.Attributes                 exposing (class, classList, href, style)
 import Html.Events                     exposing (onClick)
 import Page.Login       as Login
 import Page.CodeProblem as CodeProblem
-
+import Debug
 
 type Page 
     = NotFound
@@ -20,7 +20,7 @@ view : Page -> { title : String, content : Html msg } -> Document msg
 view page {title, content} =
     { title = title ++ " - Coding Problems"
     , body  = viewHeader page :: content :: [viewFooter ]
-    }
+    } |> Debug.log "Page view updated"
 
 viewHeader : Page -> Html msg
 viewHeader page =

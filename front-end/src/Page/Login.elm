@@ -13,14 +13,15 @@ import Json.Encode        as Encode
 import Page.CodeProblem   as CodeProblem
 import Route                             exposing (pushUrl)
 import Error                             exposing (errorToStr)
+import Session                           exposing (Session,Cred, getNavKey)
 
 -- TODO: fix routing, handled access correctly (Using session) & refreshing of token, show output of code, abstract Http with endpoints, update css styling, register page, choce codeproblem page
 
 -- MODEL
 
 type alias Model =
-  { navKey : Nav.Key 
-  , user   : User
+  { session : Session 
+  , user    : User
   }
 
 type alias User =
@@ -28,14 +29,14 @@ type alias User =
   , password : String
   }
 
-type alias Cred =
-    { access  : String
-    , refresh : String   
-    }
+-- type alias Cred =
+--     { access  : String
+--     , refresh : String   
+--     }
 
-init : Nav.Key -> (Model, Cmd msg)
-init navKey = 
-    ({ navKey = navKey
+init : Session -> (Model, Cmd msg)
+init session = 
+    ({ session = session
      , user   =
             { username = ""
             , password = ""
@@ -57,8 +58,8 @@ update msg model =
     case msg of
         SubmitLogin -> --(model, Cmd.msg GotCodeProblemMsg CodeProblem.Loading)
             let 
-                -- request = submitRequest model.user
-                request =  Route.pushUrl Route.CodeProblem model.navKey-- tmp just to test routing
+                request = submitRequest model.user
+                -- request =  Route.pushUrl Route.CodeProblem (getNavKey model.session) -- tmp just to test routing
             in 
             ( model
             , request
@@ -72,8 +73,11 @@ update msg model =
             updateCred (\user -> { user | password = password }) model
 
         CompletedLogin (Ok cred) ->
-            ( model
-            , Cmd.none
+            let
+                request =  Route.pushUrl Route.CodeProblem (getNavKey model.session)
+            in
+            ( { model | session = Session.Authenticated (getNavKey model.session) cred }
+            , request
             ) |> Debug.log "nicee login"
 
         CompletedLogin (Err errorMsg) -> (model, Cmd.none) |> Debug.log ("login error: " ++ (errorToStr errorMsg))
@@ -177,7 +181,7 @@ submitRequest user =
 
         request =
             { method = "POST"
-            , headers = hs
+            , headers = []
             , url = "http://localhost:8080/login"
             , body = Http.jsonBody (userEncoder user)
             , expect = Http.expectJson CompletedLogin credDecoder
