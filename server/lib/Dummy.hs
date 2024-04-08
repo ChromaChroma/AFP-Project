@@ -16,7 +16,7 @@ dummyUUID = fromJust $ fromString "08a2c3d9-b7ec-48e5-8f40-3a942ad01130"
 
 dummyCodingProblems = [
   CodingProblem {
-    _id = "123",
+    _id = dummyUUID,
     deadline = randomDate,
     problemTags  = [ "Optimization" ],
     difficulty   = Intermediate,

@@ -15,6 +15,7 @@ import Crypto.JWT                (SignedJWT)
 import Crypto.JOSE               (JWK, encodeCompact)
 import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.IO.Class    (liftIO, MonadIO)
+import Database.PostgreSQL.Simple(Connection)
 import Data.Aeson                (FromJSON, ToJSON)
 import Data.ByteString.Lazy.UTF8 (toString)
 import Data.Text                 (Text, pack)
@@ -24,10 +25,10 @@ import GHC.Generics              (Generic)
 import Servant                   (err401, err404)
 -- | Project imports
 import Dummy                     (dummyUUID)
+import Database                  (authenticateUser, getUserById)
 import Security.Auth             (signToken)
 import Security.User             (User(..))
 import Security.Claims           (RefreshClaims, accessClaims, refreshClaims, subjectClaim)
-
 
 data LoginRequest = LoginRequest
   { username :: !Text
@@ -53,26 +54,21 @@ loginResponse jwk acc refr = do
 toText :: SignedJWT -> Text
 toText = pack . toString . encodeCompact
 
-loginHandler :: (MonadThrow m, MonadIO m) => JWK -> LoginRequest -> m LoginResponse
-loginHandler jwk LoginRequest {..} = case attemptLogin username password of 
-  Just _  -> do
-    now <- liftIO getCurrentTime
-    loginResponse jwk (accessClaims dummyUUID now) (refreshClaims dummyUUID now)
-  _       -> throwM err401
-  where
-    -- | TODO: Attempt actual login check
-    attemptLogin :: Text -> Text -> Maybe User
-    attemptLogin "user" "12345" = Just (User username "SomeEmail")
-    attemptLogin _ _            = Nothing
+--
+-- Handlers
+--
+loginHandler :: (MonadThrow m, MonadIO m) => Connection -> JWK -> LoginRequest -> m LoginResponse
+loginHandler conn jwk LoginRequest {..} =  do
+  user <- liftIO $ authenticateUser conn username password
+  now <- liftIO getCurrentTime
+  let uid = _id user
+  loginResponse jwk (accessClaims uid now) (refreshClaims uid now) 
 
 refreshTokenHandler :: (MonadThrow m, MonadIO m) => JWK -> Maybe RefreshClaims -> m LoginResponse
 refreshTokenHandler jwk (Just claims@(subjectClaim -> Just uid)) = do
   now <- liftIO getCurrentTime
   loginResponse jwk (accessClaims uid now) claims
-  
 refreshTokenHandler _ _ = throwM err401
 
-getUserHandler :: MonadThrow m => UUID -> m User
-getUserHandler uid
-  | uid /= nil = pure (User "user" "user@mail.com") --TODO change to actual user data 
-  | otherwise  = throwM err404
+getUserHandler :: (MonadThrow m, MonadIO m) => Connection -> UUID -> m User
+getUserHandler conn uid = liftIO $ getUserById conn uid
