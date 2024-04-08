@@ -69,7 +69,6 @@ submitAttempt :: (MonadThrow m, MonadIO m) => Maybe AccessClaims -> Text -> Atte
 submitAttempt (Just _) pId (AttemptDTO code) = do 
                                                 cp  <- findCodingProblemById pId
                                                 res <- liftIO (print code)
-                                                liftIO $ putStrLn "============="
                                                 liftIO $ processAttempt code 
                                                 pure  "Done!" 
 submitAttempt _ _ _                           = throwM err401
