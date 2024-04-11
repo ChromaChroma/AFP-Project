@@ -7,6 +7,7 @@ module Types where
 
 -- | Dependency imports
 import Data.Aeson                 (FromJSON, ToJSON)
+import qualified Data.ByteString.Char8 as B
 import Data.Text                  (Text)
 import Data.Time                  (UTCTime)
 import Data.UUID                  (UUID)
@@ -46,7 +47,16 @@ type Input = Text
 type Output = Text
 
 data Visibility = Visible | Hidden 
-  deriving (Generic, Show, Typeable, FromJSON, ToJSON, FromField, ToField)
+  deriving (Generic, Show, Typeable, FromJSON, ToJSON)
+
+instance ToField Visibility where 
+  toField Visible = Plain "Visible"
+  toField Hidden  = Plain "Hidden"
+instance FromField Visibility where 
+  fromField  _ (Just "Visible") = return Visible
+  fromField  _ (Just "Hidden") = return Hidden
+  fromField  f (Just dat)      = returnError ConversionFailed f (B.unpack dat)
+  fromField  f _               = returnError UnexpectedNull f ""
 
 -- | A test case for a coding assignment with a description, input values and expected output values
 type TestCase = (TestCaseDescription, Input, Output, Visibility) 
@@ -73,6 +83,11 @@ instance ToField ProblemDifficulty where
 
 type Tag = Text
 
+data CodingProblemCases = CodingProblemCases 
+  { casesCodingProblemId :: CodingProblemId
+  , testCases            :: [TestCase]
+  } deriving (Generic, Show, Typeable, FromJSON, ToJSON, FromRow, ToRow)
+
 data CodingProblem = CodingProblem
   { _id          :: CodingProblemId,
     deadline     :: UTCTime,
@@ -80,7 +95,7 @@ data CodingProblem = CodingProblem
     difficulty   :: ProblemDifficulty,
     title        :: Text,
     description  :: Text,
-    testCases    :: [TestCase],
+    -- testCases    :: [TestCase],
     templateCode :: Text
     -- leaderboard  :: Leaderboard
   } deriving (Generic, Show, Typeable, FromJSON, ToJSON, FromRow, ToRow)
@@ -97,6 +112,7 @@ instance ToField [Tag] where
   toField  _ = Plain ""
 instance FromField [Tag] where 
   fromField  _ _ = return []
+
 
 {- Code Attempt -}
 

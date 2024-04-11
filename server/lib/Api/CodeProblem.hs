@@ -24,7 +24,7 @@ import Servant.Server.Generic     (AsServerT)
 import Types
 import Security.Claims            (AccessClaims, extractSub)
 import System.Processing          (processAttempt)
-import qualified Database as DB   (getCodingProblems, getCodingProblemById)
+import qualified Database as DB   (getCodingProblems, getCodingProblemById, getCodingProblemCasesById)
 import Dummy
 
 import Debug.Trace (trace)
@@ -74,8 +74,9 @@ getCodingProblem conn = liftIO . DB.getCodingProblemById conn
   
 submitAttempt :: (MonadThrow m, MonadIO m) => Connection ->  Maybe AccessClaims -> UUID -> AttemptDTO -> m Text
 submitAttempt conn (Just c) pId (AttemptDTO code) = do 
-                                                    uid <- extractSub c
-                                                    cp  <- liftIO $ DB.getCodingProblemById conn pId
-                                                    liftIO $ processAttempt uid cp code 
+                                                    uid   <- extractSub c
+                                                    cp    <- liftIO $ DB.getCodingProblemById conn pId
+                                                    cases <- liftIO $ DB.getCodingProblemCasesById conn pId
+                                                    liftIO $ processAttempt uid cp cases code 
                                                     pure  "Done!" 
 submitAttempt _ _ _ _                             = throwM err401

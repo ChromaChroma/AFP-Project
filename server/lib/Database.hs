@@ -36,6 +36,11 @@ getCodingProblemById conn cpId = do
   res <- query conn "SELECT * from CodingProblems where id = ? LIMIT 1;" (Only cpId)   
   unwrapValue res
 
+getCodingProblemCasesById :: Connection -> UUID -> IO CodingProblemCases
+getCodingProblemCasesById conn cpId = do
+  res <- query conn "SELECT description, input, output, visibility from CodingProblemCases as cp where cp.casescodingproblemid = ?;" (Only cpId)   
+  return $ CodingProblemCases cpId res
+
 -- 
 -- Datasensitive Functions
 -- 
