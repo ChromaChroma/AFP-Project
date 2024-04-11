@@ -1,8 +1,8 @@
 module Utils.Types exposing (..)
 
 -- import Utils.Types exposing (..)
--- import Session exposing (..)
 import Browser.Navigation as Nav
+
 -- Code Problem 
 
 type ProblemDifficulty 
