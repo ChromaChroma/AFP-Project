@@ -8,7 +8,7 @@ import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
 import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
-import Session               exposing (Session)
+import Session               exposing (Session, getCred)
 
 
 -- MODEL
@@ -85,7 +85,12 @@ update msg model =
     UploadSubmission                 -> 
         case model.uploadedSubmission of
             Just file ->
-                ( model, submitFile file )   -- TODO:handle this case
+                case getCred model.session of
+                    Just cred ->
+                        ( model, submitFile cred.access file )   -- TODO:handle this case
+
+                    Nothing ->
+                        ( model, Cmd.none ) -- TODO should give use some feedback about not logged in
             
             Nothing   ->
                 ( model, Cmd.none )
@@ -126,36 +131,84 @@ view model =
     }
 
 
+-- viewCodeProblem : Model -> Html Msg
+-- viewCodeProblem model =
+--   case model.state of
+--     Failure         -> 
+--         div [] [ text "Failed to load problem case! "
+--                , button [ onClick Reload ] 
+--                         [ text " Reload" ]
+--                ]
+
+--     Loading         -> 
+--         text "Loading..."
+
+--     Success problem ->
+--         div [ class "problem-container" ]
+--             [ h2 [ class "title" ] [ text problem.title ]
+--             , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
+--             , p  [ class "deadline" ] [ text "Deadline:", text problem.deadline ]
+--             , p  [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
+--             , hr [ class "separator" ] []
+--             , p  [ class "description" ] [ text problem.description ]
+--             , hr [ class "separator" ] []
+--             , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Template" ]
+--             , text "Upload your answer here: "
+--             , input
+--                 [ type_ "file"
+--                 , onInput GotFile
+--                 ]
+--                 []
+--             , button [ class "upload-button", onClick UploadSubmission ] [ text "Submit" ]
+--             ]
+
 viewCodeProblem : Model -> Html Msg
 viewCodeProblem model =
-  case model.state of
-    Failure         -> 
-        div [] [ text "Failed to load problem case! "
-               , button [ onClick Reload ] 
-                        [ text " Reload" ]
-               ]
-
-    Loading         -> 
-        text "Loading..."
-
-    Success problem ->
-        div [ class "problem-container" ]
-            [ h2 [ class "title" ] [ text problem.title ]
-            , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
-            , p  [ class "deadline" ] [ text "Deadline:", text problem.deadline ]
-            , p  [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
-            , hr [ class "separator" ] []
-            , p  [ class "description" ] [ text problem.description ]
-            , hr [ class "separator" ] []
-            , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Template" ]
-            , text "Upload your answer here: "
-            , input
-                [ type_ "file"
-                , onInput GotFile
+    case model.state of
+        Failure ->
+            div [ class "problem-container" ]
+                [ p [ class "error-message" ]
+                    [ text "Failed to load problem case! "
+                    , button [ class "reload-button", onClick Reload ]
+                        [ text "Reload" ]
+                    ]
                 ]
-                []
-            , button [ class "upload-button", onClick UploadSubmission ] [ text "Submit" ]
-            ]
+
+        Loading ->
+            div [ class "problem-container" ]
+                [ p [ class "loading-message" ] [ text "Loading..." ] ]
+
+        Success problem ->
+            div [ class "problem-container" ]
+                [ h2 [ class "title" ] [ text problem.title ]
+                , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
+                , p [ class "info-line" ]
+                    [ text "Deadline: "
+                    , span [ class "info-value" ] [ text problem.deadline ]
+                    ]
+                , p [ class "info-line" ]
+                    [ text "Difficulty: "
+                    , span [ class "info-value" ] [ text (diffToStr problem.difficulty) ]
+                    ]
+                , hr [] []
+                , div [ class "description" ] 
+                    [ text problem.description
+                    , div [ class "button-group" ]
+                        [ button [ class "button download-button", onClick (DownloadTemplate problem.templateCode) ]
+                            [ text "Template" ]
+                        ]
+                    ]
+                , hr [] []
+                , div [ class "button-group" ]
+                    [ input
+                        [ type_ "file"
+                        , onInput GotFile
+                        ]
+                        []
+                    , button [ class "upload-button", onClick UploadSubmission ]
+                        [ text "Submit" ]
+                    ]
+                ]
 
 -- Helper functions
 tagToHtml : String -> Html Msg
@@ -224,10 +277,31 @@ submissionEncoder file =
     Encode.object 
         [("code", Encode.string file)]
 
-submitFile : String -> Cmd Msg
-submitFile file =
-    Http.post
-        { body = Http.jsonBody (submissionEncoder file)
-        , expect = Http.expectString CompletedSubmission
-        , url = "http://localhost:8080/coding-problems/123/attempts"
-        }
+submitFile : String -> String -> Cmd Msg
+submitFile access file =
+    -- Http.post
+    --     { body = Http.jsonBody (submissionEncoder file)
+    --     , expect = Http.expectString CompletedSubmission
+    --     , url = "http://localhost:8080/coding-problems/123/attempts"
+    --     }
+
+
+    let
+        hs : List Http.Header
+        hs =
+            [ Http.header "Access-Control-Allow-Origin" "*",
+              Http.header "Accept" "*/*",
+              Http.header "Authorization" ("Bearer " ++ access)
+            ]
+
+        request =
+            { method = "POST"
+            , headers = hs
+            , url = "http://localhost:8080/coding-problems/123/attempts"
+            , body = Http.jsonBody (submissionEncoder file)
+            , expect = Http.expectString CompletedSubmission
+            , timeout = Nothing
+            , tracker = Nothing
+            }
+    in
+    Http.request request

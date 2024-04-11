@@ -69,7 +69,7 @@ currentPage ( model, cmds ) =
                     ) |> Debug.log "dfd22222222222222fdf"
     in
     ( { model | page = currentPageModel }
-    , Cmd.batch [ cmds, currentPageCmds ]
+    , Cmd.batch [ currentPageCmds ]
     )
 
 
@@ -182,7 +182,19 @@ view model =
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
-subscriptions _ = Sub.none
+subscriptions model = 
+    case model.page of
+        NotFound                ->
+            Sub.none |> Debug.log ("notFound")
+
+        Login login             ->
+            Sub.map GotLoginMsg (Login.subscriptions login)
+
+        CodeProblem codeProblem ->
+            Sub.map GotCodeProblemMsg (CodeProblem.subscriptions codeProblem)
+    
+    
+    
 
 
 -- MAIN

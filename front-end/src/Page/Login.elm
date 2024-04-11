@@ -48,10 +48,13 @@ init session =
 -- UPDATE
 
 type Msg
-  = SetUsername    String
-  | SetPassword    String
+  = UpdateInput    Field String
   | SubmitLogin
   | CompletedLogin (Result Http.Error Cred)
+
+type Field
+  = Username
+  | Password
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -66,17 +69,18 @@ update msg model =
             )
 
 
-        SetUsername username ->
+        UpdateInput Username username ->
             updateCred (\user -> { user | username = username }) model
 
-        SetPassword password ->
+        UpdateInput Password password ->
             updateCred (\user -> { user | password = password }) model
 
         CompletedLogin (Ok cred) ->
             let
-                request =  Route.pushUrl Route.CodeProblem (getNavKey model.session)
+                updateModel = { model | session = Session.Authenticated (getNavKey model.session) cred }
+                request =  Route.pushUrl Route.CodeProblem (getNavKey updateModel.session)
             in
-            ( { model | session = Session.Authenticated (getNavKey model.session) cred }
+            ( updateModel
             , request
             ) |> Debug.log "nicee login"
 
@@ -94,50 +98,70 @@ updateCred transform model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
+    -- Session.changes GotSession (getNavKey model.session)
 
 -- VIEW
 
+-- view : Model -> { title : String, content : Html Msg }
+-- view model =
+--     { title   = "Login"
+--     , content =
+--         div [ class "cred-page" ]
+--             [ div [ class "container page" ]
+--                 [ div [ class "row" ]
+--                     [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
+--                         [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
+--                         , viewUserLogin model.user
+--                         ]
+--                     ]
+--                 ]
+--             ]
+--     }
+
+-- viewUserLogin : User -> Html Msg
+-- viewUserLogin form =
+--     Html.form [ onSubmit SubmitLogin ]
+--         [ fieldset [ class "form-group" ]
+--             [ input
+--                 [ class "form-control form-control-lg"
+--                 , placeholder "username"
+--                 , onInput SetUsername
+--                 , value form.username
+--                 ]
+--                 []
+--             ]
+--         , fieldset [ class "form-group" ]
+--             [ input
+--                 [ class "form-control form-control-lg"
+--                 , type_ "password"
+--                 , placeholder "Password"
+--                 , onInput SetPassword
+--                 , value form.password
+--                 ]
+--                 []
+--             ]
+--         , button [ class "btn btn-lg btn-primary pull-xs-right" ]
+--             [ text "Sign in" ]
+--         ]
+
 view : Model -> { title : String, content : Html Msg }
 view model =
-    { title   = "Login"
+    { title = "Login"
     , content =
-        div [ class "cred-page" ]
-            [ div [ class "container page" ]
-                [ div [ class "row" ]
-                    [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
-                        [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
-                        , viewUserLogin model.user
-                        ]
-                    ]
+        div [ class "login-container" ]
+            [ h2 [] [ text "Login" ]
+            , Html.form [ class "login-form", onSubmit SubmitLogin ]
+                [ label [ for "username" ] [ text "Username" ]
+                , input [ type_ "text", id "username", name "username", placeholder "Enter your username", value model.user.username, onInput (UpdateInput Username) ] []
+                , label [ for "password" ] [ text "Password" ]
+                , input [ type_ "password", id "password", name "password", placeholder "Enter your password", value model.user.password, onInput (UpdateInput Password) ] []
+                , button [ type_ "submit" ] [ text "Login" ]
                 ]
             ]
-    }
+        }
 
-viewUserLogin : User -> Html Msg
-viewUserLogin form =
-    Html.form [ onSubmit SubmitLogin ]
-        [ fieldset [ class "form-group" ]
-            [ input
-                [ class "form-control form-control-lg"
-                , placeholder "username"
-                , onInput SetUsername
-                , value form.username
-                ]
-                []
-            ]
-        , fieldset [ class "form-group" ]
-            [ input
-                [ class "form-control form-control-lg"
-                , type_ "password"
-                , placeholder "Password"
-                , onInput SetPassword
-                , value form.password
-                ]
-                []
-            ]
-        , button [ class "btn btn-lg btn-primary pull-xs-right" ]
-            [ text "Sign in" ]
-        ]
+-- viewForm : Model -> Html Msg
+-- viewForm model =
 
 
 

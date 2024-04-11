@@ -1,20 +1,20 @@
-.navbar {
-    display: block;
+/* Global styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background-color: #FFCD00;
+    color: #000000;
+    padding: 20px;
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #FFCD00; 
-    padding: 0.5rem 1rem; 
 }
 
-.left-content {
-    margin-right: auto; 
-}
-
-.right-content {
-    margin-left: auto; 
-}
-
-.logo-font {
+.logo {
     font-family: 'Arial', sans-serif; 
     font-size: 36px; 
     font-weight: bold; 
@@ -24,16 +24,24 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); 
 }
 
-.logo-text-small {
-    font-size: 14px; 
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
 
-.logo-font {
-    font-family: titillium web,sans-serif
+.navbar li {
+    display: inline;
+    margin-right: 20px;
 }
 
-footer {
-    background: #f3f3f3;
+.navbar li:last-child {
+    margin-right: 0;
+}
+
+.footer {
+    background-color: #c00a343d;
+    color: #FFFFFF;
     margin-top: 3rem;
     padding: 1rem 0;
     position: absolute;
@@ -41,11 +49,11 @@ footer {
     width: 100%;
 }
 
-footer .logo-font {
+.footer .logo-font {
     vertical-align: middle
 }
 
-footer .attribution {
+.footer .attribution {
     vertical-align: middle;
     margin-left: 10px;
     font-size: .8rem;
@@ -53,72 +61,110 @@ footer .attribution {
     font-weight: 300
 }
 
-.container {
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 15px;
-    padding-right: 15px
+/* Login View */
+.login-container {
+    max-width: 400px;
+    margin: auto;
+    margin-top: 5%;
+    padding: 20px 30px; /* Adjusted padding */
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.logo-font {
-    font-family: titillium web,sans-serif
+.login-form label {
+    display: block;
+    margin-bottom: 10px;
+    color: #000000;
 }
 
-.container.page {
-    margin-top: 1.5rem
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: calc(100% - 20px); /* Adjusted width */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #C00A35;
+    border-radius: 5px;
 }
 
+.login-form button[type="submit"] {
+    width: 100%; 
+    padding: 10px;
+    margin: 0 auto;
+    border: none;
+    border-radius: 5px;
+    background-color: #C00A35;
+    color: #FFFFFF;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-form button[type="submit"]:hover {
+    background-color: #FFCD00;
+}
+
+/* Code Problem View */
 .problem-container {
-    border: 1px solid #ccc;
+    max-width: 800px;
+    margin: 20px auto;
     padding: 20px;
-    margin-bottom: 20px;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.title {
-    font-size: 24px;
+.problem-container h2.title {
+    color: #000000; /* Title color */
     margin-bottom: 10px;
 }
 
-.problem-tags {
+.problem-container ul.problem-tags {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-.problem-tags li {
-    display: inline-block;
+.problem-container ul.problem-tags li {
+    display: inline;
     margin-right: 10px;
-    background-color: #f0f0f0;
+    background-color: #FFCD00; /* Tag background color */
     padding: 5px 10px;
     border-radius: 5px;
 }
 
-.deadline {
-    font-style: italic;
+.problem-container p.info-line {
     margin-bottom: 10px;
 }
 
-.separator {
-    border-top: 1px solid #ccc;
-    margin: 20px 0;
+.problem-container span.info-value {
+    font-weight: bold;
 }
 
-.description {
-    margin-bottom: 20px;
-}
-
-.download-button,
-.upload-button {
-    background-color: #007bff;
-    color: #fff;
+.problem-container hr {
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-right: 10px;
+    height: 1px;
+    background-color: #C00A35; /* Horizontal rule color */
+    margin: 20px 0; /* Margin top and bottom */
 }
 
-.download-button:hover,
-.upload-button:hover {
-    background-color: #0056b3;
+.problem-container div.description {
+    margin-top: 20px;
+    color: #000000; /* Description text color */
+}
+
+.problem-container div.button-group button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #C00A35;
+    color: #FFFFFF;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.problem-container div.button-group button:hover {
+    background-color: #FFCD00;
 }
