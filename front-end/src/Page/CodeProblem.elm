@@ -137,38 +137,6 @@ view model =
             [ viewCodeProblem model ]
     }
 
-
--- viewCodeProblem : Model -> Html Msg
--- viewCodeProblem model =
---   case model.state of
---     Failure         -> 
---         div [] [ text "Failed to load problem case! "
---                , button [ onClick Reload ] 
---                         [ text " Reload" ]
---                ]
-
---     Loading         -> 
---         text "Loading..."
-
---     Success problem ->
---         div [ class "problem-container" ]
---             [ h2 [ class "title" ] [ text problem.title ]
---             , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
---             , p  [ class "deadline" ] [ text "Deadline:", text problem.deadline ]
---             , p  [ class "difficulty" ] [ text "Difficulty:", text (diffToStr problem.difficulty) ]
---             , hr [ class "separator" ] []
---             , p  [ class "description" ] [ text problem.description ]
---             , hr [ class "separator" ] []
---             , button [ class "download-button", onClick (DownloadTemplate problem.templateCode) ] [ text "Template" ]
---             , text "Upload your answer here: "
---             , input
---                 [ type_ "file"
---                 , onInput GotFile
---                 ]
---                 []
---             , button [ class "upload-button", onClick UploadSubmission ] [ text "Submit" ]
---             ]
-
 viewCodeProblem : Model -> Html Msg
 viewCodeProblem model =
     case model.state of

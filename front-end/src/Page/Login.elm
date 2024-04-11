@@ -107,47 +107,6 @@ subscriptions model = Session.changes GotSession (getNavKey model.session) |> De
 
 -- VIEW
 
--- view : Model -> { title : String, content : Html Msg }
--- view model =
---     { title   = "Login"
---     , content =
---         div [ class "cred-page" ]
---             [ div [ class "container page" ]
---                 [ div [ class "row" ]
---                     [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
---                         [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
---                         , viewUserLogin model.user
---                         ]
---                     ]
---                 ]
---             ]
---     }
-
--- viewUserLogin : User -> Html Msg
--- viewUserLogin form =
---     Html.form [ onSubmit SubmitLogin ]
---         [ fieldset [ class "form-group" ]
---             [ input
---                 [ class "form-control form-control-lg"
---                 , placeholder "username"
---                 , onInput SetUsername
---                 , value form.username
---                 ]
---                 []
---             ]
---         , fieldset [ class "form-group" ]
---             [ input
---                 [ class "form-control form-control-lg"
---                 , type_ "password"
---                 , placeholder "Password"
---                 , onInput SetPassword
---                 , value form.password
---                 ]
---                 []
---             ]
---         , button [ class "btn btn-lg btn-primary pull-xs-right" ]
---             [ text "Sign in" ]
---         ]
 
 view : Model -> { title : String, content : Html Msg }
 view model =
@@ -165,74 +124,6 @@ view model =
                 ]
             ]
         }
-
--- viewForm : Model -> Html Msg
--- viewForm model =
---     Html.form [ class "login-form", onSubmit SubmitLogin ]
---         [ viewFormInput
---             { field = Username
---             , value = model.user.username
---             }
---         , viewFormInput
---             { field = Password
---             , value = model.user.password
---             }
---         , viewFormControls model
---         ]
-
--- viewFormInput :
---     { field : Field
---     , value : String
---     }
---     -> Html Msg
--- viewFormInput options =
---     div [ class "field" ]
---         [ label [ class "label" ] [ text (fromFieldToLabel options.field) ]
---         , div [ class "control" ]
---             [ input
---                 [ class "input"
---                 , type_ (fromFieldToInputType options.field)
---                 , value options.value
---                 , onInput (UpdateInput options.field)
---                 ]
---                 []
---             ]
---         ]
-
--- fromFieldToLabel : Field -> String
--- fromFieldToLabel field =
---     case field of
---         Username ->
---             "username"
-
---         Password ->
---             "Password"
-
-
--- fromFieldToInputType : Field -> String
--- fromFieldToInputType field =
---     case field of
---         Username ->
---             "username"
-
---         Password ->
---             "password"
-
--- viewFormControls : Model -> Html Msg
--- viewFormControls model =
---     div [ class "field is-grouped is-grouped-right" ]
---         [ div
---             [ class "control" ]
---             [ button
---                 [ class "button is-link"
---                 , disabled model.isSubmittingForm
---                 , classList [ ( "is-loading", model.isSubmittingForm ) ]
---                 ]
---                 [ text "Sign in" ]
---             ]
---         ]
-
-
 
 -- HTTP
 
@@ -259,19 +150,7 @@ credDecoder =
 
 submitRequest : User -> Cmd Msg
 submitRequest user =
-    -- Http.post
-    --     { body = Http.jsonBody (userEncoder user)
-    --      , expect = Http.expectJson CompletedLogin credDecoder
-    --     , url = "http://localhost:8080/login"
-    --     }
     let
-        hs : List Http.Header
-        hs =
-            [ Http.header "Access-Control-Allow-Origin" "*",
-              Http.header "Accept" "*/*",
-              Http.header "Authorization" "Bearer eyJhbGciOiJIUzUxMiJ9.eyJhdWQiOiJhY2Nlc3MiLCJleHAiOjEuNzExNTYwMjc2Mjk1MjM3NTZlOSwiaWF0IjoxLjcxMTU1OTM3NjI5NTIzNzU2ZTksInN1YiI6IjA4YTJjM2Q5LWI3ZWMtNDhlNS04ZjQwLTNhOTQyYWQwMTEzMCJ9.5ddVeYFeCJ9KaUrpUVc6iqx1r30viqLqqZvGEUCi7GneW0UEO5oYLNF4c-jkRV5u6cM8HyyE0AOuv10fadrZWA"
-            ]
-
         request =
             { method = "POST"
             , headers = []

@@ -24,13 +24,6 @@ view page {title, content} =
     , body  = viewHeader page :: content :: [viewFooter ]
     }
 
--- viewHeader : Page -> Html msg
--- viewHeader page =
---     nav [ class "container-header" ]
---         [ div [ class "left-content" ] [ a [ class "logo-font"] [text "Coding Problems"] ]
---         , div [ class "right-content" ] (viewMenu page)
---         ]
-
 viewHeader : Page -> Html msg
 viewHeader page =
     header [ class "header" ]
@@ -61,7 +54,7 @@ pageNameFromLink loggedIn link =
     case link of
         "/login" -> 
             if loggedIn then
-                "Logout"
+                "Logout" -- TODO: logout should remove stored creds
             else 
                 "Login"
         
@@ -83,10 +76,3 @@ viewFooter =
                 ]
             ]
         ]
-
--- viewFooter : Html msg
--- viewFooter =
---     footer [ class "footer" ]
---         [ p [] [ text "© 2024 Your Company. All rights reserved." ]
---         , p [] [ text "Terms of Service | Privacy Policy" ]
---         ]

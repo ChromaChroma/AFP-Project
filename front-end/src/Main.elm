@@ -31,65 +31,8 @@ init _ url navKey =
             , session = Session.Unauthenticated navKey
             }
     in
-    changeRouteTo (Route.parseUrl url) model
-    -- currentPage ( model, Cmd.none)
-
-
-currentPage : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
-currentPage ( model, cmds ) =
-    let
-        viewPage page toMsg config =
-                let
-                    { title, body } =
-                        Page.view page config 
-                in
-                { title = title
-                , body = List.map (Html.map toMsg) body
-                }
-        ( currentPageModel, currentPageCmds) =
-            case model.route of
-                Route.PageNotFound ->
-                    ( NotFound, Cmd.none )
-
-                Route.Login        ->
-                    let
-                        ( pageModel, pageCmds ) =
-                            Login.init model.session
-                    in
-                    ( Login pageModel
-                    , Cmd.map GotLoginMsg pageCmds 
-                    )
-
-                Route.CodeProblem  ->
-                    let
-                        ( pageModel, pageCmds ) =
-                            CodeProblem.init model.session
-                    in
-                    ( CodeProblem pageModel
-                    , Cmd.map GotCodeProblemMsg pageCmds 
-                    ) |> Debug.log "dfd22222222222222fdf"
-    in
-    ( { model | page = currentPageModel }
-    , Cmd.batch [ cmds, currentPageCmds ]
-    )
-
-
-
-
-
--- type Model
---     = Login Login.Model
---     | CodeProblem CodeProblem.Model
-
--- init : () -> (Model, Cmd Msg)
--- -- init _ = let (loginModel, loginCmd) =
--- --                     CodeProblem.init
--- --             in
--- --             (CodeProblem loginModel, Cmd.map GotCodeProblemMsg loginCmd)
--- init _ = let (loginModel, loginCmd) =
---                     Login.init
---             in
---             (Login loginModel, loginCmd)
+    changeRouteTo (Route.parseUrl url) model -- TODO: we should read on init if we have creds stored
+   
 
 -- UPDATE
 
@@ -117,17 +60,12 @@ toSession model =
         
 
 changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
-changeRouteTo maybeRoute model =
+changeRouteTo route model =
     let
         session =
             toSession model
     in
-    case maybeRoute of
-        -- Nothing ->
-        --     ( { model | page = NotFound } 
-        --     , Cmd.none
-        --     )
-
+    case route of
         Route.PageNotFound ->
             ( { model | page = NotFound } 
             , Cmd.none
@@ -171,13 +109,6 @@ update msg model =
 
         ( UrlChanged url, _ )                         ->
             changeRouteTo (Route.parseUrl url) model
-            -- let
-            --     newRoute =
-            --         Route.parseUrl url
-            -- in
-            -- ( { model | route = newRoute }
-            -- , Cmd.none
-            -- ) |> currentPage |> Debug.log "dfdfdfdfdfdfdfdfdf"
 
         ( GotPageNotFound, NotFound )                 ->
             ( { model | page = NotFound } 
@@ -255,17 +186,13 @@ subscriptions model =
 
 -- MAIN
 
--- extractBody : Document Msg -> Html Msg
--- extractBody document =
---     div [] document.body
-
 main : Program Value Model Msg
 main =
   Browser.application 
     { init          = init
     , update        = update
-    , subscriptions = subscriptions --\_ -> Sub.none 
-    , view          = view -- \model -> view model.page |> extractBody
+    , subscriptions = subscriptions
+    , view          = view
     , onUrlRequest  = LinkClicked
     , onUrlChange   = UrlChanged
     }
