@@ -6,11 +6,9 @@ import Html                  exposing (..)
 import Html.Attributes       exposing (attribute, class, disabled, href, id, placeholder, value, type_)
 import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
-import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
-import Json.Encode as Encode 
 import Session               exposing (getCred, getNavKey)
 import Utils.Types exposing (..)
-
+import Utils.Transcoder exposing (..)
 
 -- MODEL
 
@@ -207,35 +205,10 @@ getCodeProblem =
     , expect = Http.expectJson GotCodeProblem codeProblemDecoder
     }
 
-codeProblemDecoder : Decoder CodingProblem
-codeProblemDecoder =
-  Decode.map7 CodingProblem
-    (field "_id" string)
-    (field "deadline" string)
-    (field "problemTags" (list string))
-    (field "difficulty" difficultyDecoder)
-    (field "title" string)
-    (field "description" string)
-    (field "templateCode" string)
-    -- (field "testCases" (list string))
 
--- Decoder for ProblemDifficulty
-difficultyDecoder : Decoder ProblemDifficulty
-difficultyDecoder =
-    Decode.string |> Decode.andThen -- Decode.customDecoder
-        (\str ->
-            case str of
-                "Easy" -> Decode.succeed Easy
-                "Intermediate" -> Decode.succeed Intermediate
-                "Difficult" -> Decode.succeed Difficult
-                "Extreme" -> Decode.succeed Extreme
-                _ -> Decode.fail ("Invalid ProblemDifficulty: " ++ str)
-        )
 
-submissionEncoder : String -> Encode.Value
-submissionEncoder file =
-    Encode.object 
-        [("code", Encode.string file)]
+
+
 
 submitFile : String -> String -> Cmd Msg
 submitFile access file =

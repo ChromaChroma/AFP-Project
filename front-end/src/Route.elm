@@ -5,11 +5,6 @@ import Url                       exposing (Url)
 import Url.Parser                exposing (..)
 import Utils.Types exposing (..)
 
--- type Route 
---     = PageNotFound
---     | Login
---     | CodeProblem
-
 parseUrl : Url -> Route
 parseUrl url =
     case parse match url of

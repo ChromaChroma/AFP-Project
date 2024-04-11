@@ -5,31 +5,20 @@ import Html                              exposing (..)
 import Html.Attributes                   exposing (..)
 import Html.Events                       exposing (..)
 import Debug                             exposing (log)
-import Json.Decode        as Decode      exposing (Decoder, decodeString, field, string)
 import Task                              exposing (Task)
 import Http
 import Browser.Navigation as Nav
-import Json.Encode        as Encode 
 import Page.CodeProblem   as CodeProblem
 import Route                             exposing (pushUrl)
 import Utils.Error                             exposing (errorToStr)
 import Session                           exposing ( getNavKey)
 import Utils.Types exposing (..)
+import Utils.Transcoder exposing (..)
 -- TODO: fix routing, handled access correctly (Using session) & refreshing of token, show output of code, abstract Http with endpoints, update css styling, register page, choce codeproblem page
 
 -- MODEL
 
--- type alias Model =
---   { session : Session 
---   , user    : User
---   }
-
 type alias Model = LoginModel
-
--- type alias Cred =
---     { access  : String
---     , refresh : String   
---     }
 
 init : Session -> (Model, Cmd msg)
 init session = 
@@ -121,26 +110,6 @@ view model =
         }
 
 -- HTTP
-
-
-userEncoder : User -> Encode.Value
-userEncoder user = 
-    Encode.object 
-        [("username", Encode.string user.username)
-        ,("password", Encode.string user.password)
-        ]
-
-credDecoder : Decoder Cred
-credDecoder =
-  Decode.map2 Cred
-    (Decode.field "access" Decode.string)
-    (Decode.field "refresh" Decode.string)
-
--- userDecoder : Decoder User
--- userDecoder =
---   Decode.map2 User
---     (Decode.field "access" Decode.string)
---     (Decode.field "refresh" Decode.string)
 
 
 submitRequest : User -> Cmd Msg
