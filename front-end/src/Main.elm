@@ -12,8 +12,8 @@ import Page.Login         as Login
 import Page.CodeProblem   as CodeProblem
 import Page.NotFound      as NotFound
 import Json.Decode        as Decode      exposing (Value)
-import Route                             
-import Session                           exposing ( getNavKey, decodeCred)
+import Utils.Route  as Route                           
+import Utils.Session as Session                          exposing ( getNavKey, decodeCred)
 
 -- MODEL
 

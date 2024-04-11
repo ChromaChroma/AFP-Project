@@ -9,9 +9,9 @@ import Task                              exposing (Task)
 import Http
 import Browser.Navigation as Nav
 import Page.CodeProblem   as CodeProblem
-import Route                             exposing (pushUrl)
-import Utils.Error                             exposing (errorToStr)
-import Session                           exposing ( getNavKey)
+import Utils.Route     as Route                       exposing (pushUrl)
+import Utils.Error     as Error                      exposing (errorToStr)
+import Utils.Session   as Session                        exposing ( getNavKey)
 import Utils.Types exposing (..)
 import Utils.Transcoder exposing (..)
 -- TODO: fix routing, handled access correctly (Using session) & refreshing of token, show output of code, abstract Http with endpoints, update css styling, register page, choce codeproblem page

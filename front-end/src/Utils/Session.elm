@@ -1,4 +1,4 @@
-port module Session exposing (getNavKey,getCred,isLoggedIn,store,logout,storeV,changes,onStoreChange,decodeCred)
+port module Utils.Session exposing (getNavKey,getCred,isLoggedIn,store,logout,storeV,changes,onStoreChange,decodeCred)
 
 import Browser.Navigation as Nav
 import Json.Decode        as Decode      exposing (Decoder, Value, decodeString, field, string)

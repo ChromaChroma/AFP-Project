@@ -7,7 +7,7 @@ import Html.Events                     exposing (onClick)
 import Page.Login       as Login
 import Page.CodeProblem as CodeProblem
 import Debug
-import Session                         exposing (isLoggedIn)
+import Utils.Session   as Session                      exposing (isLoggedIn)
 import Maybe exposing (Maybe(..), withDefault)
 import Utils.Types exposing (..)
 -- type Page 

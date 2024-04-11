@@ -6,7 +6,7 @@ import Html                  exposing (..)
 import Html.Attributes       exposing (attribute, class, disabled, href, id, placeholder, value, type_)
 import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
-import Session               exposing (getCred, getNavKey)
+import Utils.Session as Session             exposing (getCred, getNavKey)
 import Utils.Types exposing (..)
 import Utils.Transcoder exposing (..)
 
