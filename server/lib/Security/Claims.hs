@@ -11,9 +11,12 @@ module Security.Claims
   , refreshClaims
   , refreshSettings
   , subjectClaim
+  , extractSub
   ) where
 
 -- | Dependency imports
+import Control.Monad.Catch         (MonadThrow(..))
+import Control.Monad.IO.Class      (MonadIO)
 import Control.Lens                (Lens', view, (?~))
 import Crypto.JWT                  (Audience(..), ClaimsSet, HasClaimsSet(..), JWTValidationSettings, NumericDate(..), 
                                     claimExp, claimIat, claimSub, defaultJWTValidationSettings, emptyClaimsSet, string)
@@ -24,6 +27,7 @@ import Data.Time                   (UTCTime, addUTCTime)
 import Data.UUID                   (UUID)
 import qualified Data.UUID as Uuid (toString, fromText)
 import GHC.Generics                (Generic)
+import Servant                     (err401)
 
 ----------------------------------------------------
 
@@ -69,3 +73,8 @@ refreshSettings = defaultJWTValidationSettings (== "refresh")
 
 subjectClaim :: HasClaimsSet a => a -> Maybe UUID
 subjectClaim c = view claimSub c >>= Uuid.fromText . view string
+
+extractSub :: (MonadThrow m, MonadIO m) => AccessClaims -> m UUID
+extractSub c = case subjectClaim c of 
+    Just x  -> return x
+    Nothing -> throwM err401
