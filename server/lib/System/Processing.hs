@@ -5,6 +5,7 @@ module System.Processing where
 -- | Dependency imports
 import Control.Monad.Catch    (MonadThrow(..))
 import qualified Data.ByteString.Lazy.UTF8 as UTF8 (fromString)
+import Data.UUID              (UUID)
 import Data.Text              (Text, unpack)
 import Servant
 import System.Exit            (ExitCode(..))
@@ -15,13 +16,7 @@ import System.Directory       (createDirectoryIfMissing, removeDirectoryRecursiv
 import Control.Exception      (ErrorCall, handle)
 import System.IO.Error        (catchIOError)
 -- | Project imports
-import Dummy                  (dummyUUID)
-
-test :: IO ()
-test = processAttempt exampleMain
-
-exampleMain :: Text
-exampleMain = "module Main where \n\nmain :: IO ()\nmain = do \n  putStrLn \"Hello World\""
+import Types
 
 -- | Runs an IO computation and ignores any 'IOError' or 'ErrorCall' errors in they come up.
 ignoreIOFail :: IO () -> IO ()
@@ -56,11 +51,11 @@ throwIfError io = io >>= \case
 --
 -- Creates a clean empty directory, attempts to compile, run and test the code, and returns its result.
 --
-processAttempt :: Text -> IO () 
-processAttempt code = 
-  let tempDir = "temp/" ++ show dummyUUID -- Temp dir of user
+processAttempt :: UUID -> CodingProblem -> Text -> IO () 
+processAttempt uid cp code = do
+  let tempDir = "temp/" ++ show uid
       tempDirMain = tempDir ++ "/Main.hs" 
-  in do
+
   -- | Clean removes temp dir
   ignoreIOFail $ removeDirectoryRecursive tempDir
 
