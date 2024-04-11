@@ -12,7 +12,7 @@ import Page.CodeProblem   as CodeProblem
 import Page.NotFound      as NotFound
 import Json.Decode        as Decode      exposing (Value)
 import Route                             exposing (Route)
-import Session                           exposing (Session, getNavKey)
+import Session                           exposing (Session, Cred, getNavKey)
 
 -- MODEL
 
@@ -22,7 +22,7 @@ type alias Model =
     , session : Session
     }
 
-init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url navKey =
     let
         model = 
@@ -31,7 +31,8 @@ init _ url navKey =
             , session = Session.Unauthenticated navKey
             }
     in
-    currentPage ( model, Cmd.none)
+    changeRouteTo (Route.parseUrl url) model
+    -- currentPage ( model, Cmd.none)
 
 
 currentPage : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
@@ -69,7 +70,7 @@ currentPage ( model, cmds ) =
                     ) |> Debug.log "dfd22222222222222fdf"
     in
     ( { model | page = currentPageModel }
-    , Cmd.batch [ currentPageCmds ]
+    , Cmd.batch [ cmds, currentPageCmds ]
     )
 
 
@@ -99,6 +100,60 @@ type Msg
     | LinkClicked       UrlRequest
     | UrlChanged        Url 
 
+
+
+toSession : Model -> Session
+toSession model =
+    case model.page of
+        NotFound ->
+            model.session
+
+        Login login ->
+            Login.toSession login
+
+        CodeProblem codeproblem ->
+            CodeProblem.toSession codeproblem
+
+        
+
+changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo maybeRoute model =
+    let
+        session =
+            toSession model
+    in
+    case maybeRoute of
+        -- Nothing ->
+        --     ( { model | page = NotFound } 
+        --     , Cmd.none
+        --     )
+
+        Route.PageNotFound ->
+            ( { model | page = NotFound } 
+            , Cmd.none
+            )
+
+        Route.Login ->
+            let
+                (updatedPageModel, upCmd) =
+                    Login.init session
+            in
+            ( { model | page = Login updatedPageModel}, Cmd.map GotLoginMsg upCmd)
+            
+                
+                -- |> updateWith Login GotLoginMsg model
+
+        Route.CodeProblem ->
+            -- CodeProblem.init session
+            let
+                (updatedPageModel, upCmd) =
+                    CodeProblem.init session
+            in
+            ( { model | page = CodeProblem updatedPageModel}, Cmd.map GotCodeProblemMsg upCmd)
+                -- |> updateWith CodeProblem GotCodeProblemMsg model
+        -- TODO: also add logout option
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model.page ) of
@@ -115,13 +170,14 @@ update msg model =
                     )
 
         ( UrlChanged url, _ )                         ->
-            let
-                newRoute =
-                    Route.parseUrl url
-            in
-            ( { model | route = newRoute }
-            , Cmd.none
-            ) |> currentPage |> Debug.log "dfdfdfdfdfdfdfdfdf"
+            changeRouteTo (Route.parseUrl url) model
+            -- let
+            --     newRoute =
+            --         Route.parseUrl url
+            -- in
+            -- ( { model | route = newRoute }
+            -- , Cmd.none
+            -- ) |> currentPage |> Debug.log "dfdfdfdfdfdfdfdfdf"
 
         ( GotPageNotFound, NotFound )                 ->
             ( { model | page = NotFound } 
@@ -182,7 +238,7 @@ view model =
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
-subscriptions model = 
+subscriptions model =
     case model.page of
         NotFound                ->
             Sub.none |> Debug.log ("notFound")
@@ -203,13 +259,13 @@ subscriptions model =
 -- extractBody document =
 --     div [] document.body
 
-main : Program () Model Msg
+main : Program Value Model Msg
 main =
-  Browser.application
+  Browser.application 
     { init          = init
     , update        = update
-    , subscriptions = subscriptions
-    , view          = view--\model -> view model |> extractBody
+    , subscriptions = subscriptions --\_ -> Sub.none 
+    , view          = view -- \model -> view model.page |> extractBody
     , onUrlRequest  = LinkClicked
     , onUrlChange   = UrlChanged
     }

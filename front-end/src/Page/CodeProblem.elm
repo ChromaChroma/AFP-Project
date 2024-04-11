@@ -1,4 +1,4 @@
-port module Page.CodeProblem exposing (Model, Msg, init, subscriptions, update, view, openPlainTextTabPort)
+port module Page.CodeProblem exposing (Model, Msg, init, subscriptions, update, view, openPlainTextTabPort, toSession)
 
 import Browser
 import File                  exposing (File)
@@ -8,7 +8,7 @@ import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
 import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
-import Session               exposing (Session, getCred)
+import Session               exposing (Session, getCred, getNavKey)
 
 
 -- MODEL
@@ -60,6 +60,7 @@ type Msg
   | UploadSubmission
   | CompletedSubmission (Result Http.Error String)
   | GotFile             String -- File
+  | GotSession Session
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -106,6 +107,12 @@ update msg model =
         ( { model | uploadedSubmission = Just file }
         , Cmd.none
         )
+
+    GotSession session ->
+        ( { model | session = session }
+            , Cmd.none -- Route.replaceUrl (Session.navKey session) Route.Home
+            ) |> Debug.log "got session have key?"
+
     -- GotCodeProblem (Ok codeProblem) -> (Success codeProblem, Cmd.none)
     -- GotCodeProblem (Err _) -> (Failure, Cmd.none)
 
@@ -118,7 +125,7 @@ updateState transform model =
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
-subscriptions _ = Sub.none
+subscriptions model = Session.changes GotSession (getNavKey model.session) |> Debug.log "codeeeeeeeeeeeeeeeeeeee"
 
 -- VIEW
 
@@ -305,3 +312,8 @@ submitFile access file =
             }
     in
     Http.request request
+
+
+toSession : Model -> Session
+toSession model =
+    model.session

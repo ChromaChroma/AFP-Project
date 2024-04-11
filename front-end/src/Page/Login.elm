@@ -1,4 +1,4 @@
-module Page.Login exposing (Model, Msg, init, subscriptions, update, view)
+module Page.Login exposing (Model, Msg, init, subscriptions, update, view, toSession)
 
 import Browser                           exposing (Document)
 import Html                              exposing (..)
@@ -51,6 +51,7 @@ type Msg
   = UpdateInput    Field String
   | SubmitLogin
   | CompletedLogin (Result Http.Error Cred)
+  | GotSession Session
 
 type Field
   = Username
@@ -78,13 +79,18 @@ update msg model =
         CompletedLogin (Ok cred) ->
             let
                 updateModel = { model | session = Session.Authenticated (getNavKey model.session) cred }
-                request =  Route.pushUrl Route.CodeProblem (getNavKey updateModel.session)
+                request =  Route.pushUrl Route.CodeProblem (getNavKey model.session)
             in
             ( updateModel
-            , request
+            , Cmd.batch [request, Session.store cred] --request
             ) |> Debug.log "nicee login"
 
         CompletedLogin (Err errorMsg) -> (model, Cmd.none) |> Debug.log ("login error: " ++ (errorToStr errorMsg))
+
+        GotSession session ->
+            ( { model | session = session }
+            , Route.pushUrl Route.CodeProblem (getNavKey model.session) |> Debug.log "ppppppppppp"
+            )
 
 
 updateCred : (User -> User) -> Model -> ( Model, Cmd Msg )
@@ -97,8 +103,7 @@ updateCred transform model =
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
-subscriptions model = Sub.none
-    -- Session.changes GotSession (getNavKey model.session)
+subscriptions model = Session.changes GotSession (getNavKey model.session) |> Debug.log "ooooooooooooooooooo"
 
 -- VIEW
 
@@ -150,6 +155,7 @@ view model =
     , content =
         div [ class "login-container" ]
             [ h2 [] [ text "Login" ]
+            -- , viewForm model
             , Html.form [ class "login-form", onSubmit SubmitLogin ]
                 [ label [ for "username" ] [ text "Username" ]
                 , input [ type_ "text", id "username", name "username", placeholder "Enter your username", value model.user.username, onInput (UpdateInput Username) ] []
@@ -162,6 +168,69 @@ view model =
 
 -- viewForm : Model -> Html Msg
 -- viewForm model =
+--     Html.form [ class "login-form", onSubmit SubmitLogin ]
+--         [ viewFormInput
+--             { field = Username
+--             , value = model.user.username
+--             }
+--         , viewFormInput
+--             { field = Password
+--             , value = model.user.password
+--             }
+--         , viewFormControls model
+--         ]
+
+-- viewFormInput :
+--     { field : Field
+--     , value : String
+--     }
+--     -> Html Msg
+-- viewFormInput options =
+--     div [ class "field" ]
+--         [ label [ class "label" ] [ text (fromFieldToLabel options.field) ]
+--         , div [ class "control" ]
+--             [ input
+--                 [ class "input"
+--                 , type_ (fromFieldToInputType options.field)
+--                 , value options.value
+--                 , onInput (UpdateInput options.field)
+--                 ]
+--                 []
+--             ]
+--         ]
+
+-- fromFieldToLabel : Field -> String
+-- fromFieldToLabel field =
+--     case field of
+--         Username ->
+--             "username"
+
+--         Password ->
+--             "Password"
+
+
+-- fromFieldToInputType : Field -> String
+-- fromFieldToInputType field =
+--     case field of
+--         Username ->
+--             "username"
+
+--         Password ->
+--             "password"
+
+-- viewFormControls : Model -> Html Msg
+-- viewFormControls model =
+--     div [ class "field is-grouped is-grouped-right" ]
+--         [ div
+--             [ class "control" ]
+--             [ button
+--                 [ class "button is-link"
+--                 , disabled model.isSubmittingForm
+--                 , classList [ ( "is-loading", model.isSubmittingForm ) ]
+--                 ]
+--                 [ text "Sign in" ]
+--             ]
+--         ]
 
 
 
@@ -214,3 +283,7 @@ submitRequest user =
             }
     in
     Http.request request
+
+toSession : Model -> Session
+toSession model =
+    model.session

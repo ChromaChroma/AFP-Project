@@ -11,11 +11,14 @@
     <script src="elm.js"></script>
     <!-- <script src="./src/Main.elm"></script> -->
     <script type="module">
+        var storageKey = "store";
+        var flags = localStorage.getItem(storageKey);
         var app = Elm.Main.init({
+            flags: flags,
             node: document.getElementById('elm-container')
         });
 
-        // Handle Ports
+        // Handle Ports      
         app.ports.openPlainTextTabPort.subscribe(function (content) {
             var newTab = window.open();
             //newTab.document.body.innerText = content;
@@ -34,6 +37,23 @@
                 selection.addRange(range);
             });
         });
+
+        app.ports.storeV.subscribe(function (cred) {
+            console.log ("value test: ", cred);
+            if (cred === null) {
+              localStorage.removeItem(storageKey);
+            } else {
+              localStorage.setItem(storageKey, JSON.stringify(cred));
+            }
+    
+          });
+
+          window.addEventListener("storage", function(event) {
+            console.log("event storage change !!!!!!!!!!!!!!1", event)
+            if (event.storageArea === localStorage && event.key === storageKey) {
+              app.ports.onStoreChange.send(event.newValue);
+            }
+          }, false);
     </script>
 </body>
 </html>
