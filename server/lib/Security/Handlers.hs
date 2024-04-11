@@ -24,7 +24,6 @@ import Data.UUID                 (nil, UUID, fromString)
 import GHC.Generics              (Generic)
 import Servant                   (err401, err404)
 -- | Project imports
-import Dummy                     (dummyUUID)
 import Database                  (authenticateUser, getUserById)
 import Security.Auth             (signToken)
 import Security.User             (User(..))

@@ -10,17 +10,8 @@ import Data.Text                    (Text)
 import Data.UUID                    (UUID)
 import Servant              
 -- | Project imports
-import qualified Dummy as D
 import Types
 import qualified Security.User as S (User(..))
-
-allCodingProblems :: [CodingProblem]
-allCodingProblems = D.dummyCodingProblems
-
-findCodingProblemById :: (MonadThrow m) => UUID -> m CodingProblem
-findCodingProblemById ident = case find ((ident ==) . _id) D.dummyCodingProblems of 
-  Just x  -> pure x 
-  Nothing -> throwM err404 { errBody = "Could not find coding problem with id" }
 
 -- 
 -- Util functions
