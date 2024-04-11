@@ -1,4 +1,4 @@
-module Error exposing (errorToStr)
+module Utils.Error exposing (errorToStr)
 
 import Http
 

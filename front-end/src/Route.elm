@@ -1,14 +1,14 @@
-module Route exposing (Route(..), parseUrl, pushUrl)
+module Route exposing ( parseUrl, pushUrl)
 
 import Browser.Navigation as Nav
 import Url                       exposing (Url)
 import Url.Parser                exposing (..)
+import Utils.Types exposing (..)
 
-
-type Route 
-    = PageNotFound
-    | Login
-    | CodeProblem
+-- type Route 
+--     = PageNotFound
+--     | Login
+--     | CodeProblem
 
 parseUrl : Url -> Route
 parseUrl url =
@@ -17,14 +17,14 @@ parseUrl url =
             route
 
         Nothing    ->
-            PageNotFound
+            PageNotFoundRoute
 
 match : Parser (Route -> a) a
 match = 
     oneOf
-        [ map Login top
-        , map Login (s "login")
-        , map CodeProblem (s "codeproblem")
+        [ map LoginRoute top
+        , map LoginRoute (s "login")
+        , map CodingProblemRoute (s "codeproblem")
         ]
 
 pushUrl : Route -> Nav.Key -> Cmd msg
@@ -35,11 +35,11 @@ pushUrl route navKey =
 routeToStr : Route -> String
 routeToStr route =
     case route of
-        PageNotFound ->
+        PageNotFoundRoute ->
             "/page-not-found"
 
-        Login        ->
+        LoginRoute        ->
             "/login"
 
-        CodeProblem  ->
+        CodingProblemRoute  ->
             "/codeproblem"

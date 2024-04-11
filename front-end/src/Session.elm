@@ -1,20 +1,20 @@
-port module Session exposing (Session(..), Cred, getNavKey,getCred,isLoggedIn,store,logout,storeV,changes,onStoreChange,credDecoder)
+port module Session exposing (getNavKey,getCred,isLoggedIn,store,logout,storeV,changes,onStoreChange,credDecoder,decodeCred)
 
 import Browser.Navigation as Nav
 import Json.Encode        as Encode 
 import Json.Decode        as Decode      exposing (Decoder, Value, decodeString, field, string)
-
+import Utils.Types exposing (..)
 
 -- TYPES
 
-type alias Cred =
-    { access  : String
-    , refresh : String   
-    }
+-- type alias Cred =
+--     { access  : String
+--     , refresh : String   
+--     }
 
-type Session
-    = Authenticated   Nav.Key Cred
-    | Unauthenticated Nav.Key
+-- type Session
+--     = Authenticated   Nav.Key Cred
+--     | Unauthenticated Nav.Key
 
 -- INFO
 

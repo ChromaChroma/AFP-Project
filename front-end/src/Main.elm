@@ -6,32 +6,34 @@ import Html.Events                       exposing (..)
 import Url                               exposing (Url)
 import Debug
 import Browser.Navigation as Nav
-import Page                              exposing (Page(..))
+import Page   
+import Utils.Types exposing (..)
 import Page.Login         as Login
 import Page.CodeProblem   as CodeProblem
 import Page.NotFound      as NotFound
 import Json.Decode        as Decode      exposing (Value)
-import Route                             exposing (Route)
-import Session                           exposing (Session, Cred, getNavKey)
+import Route                             
+import Session                           exposing ( getNavKey, decodeCred)
 
 -- MODEL
 
-type alias Model =
-    { route   : Route
-    , page    : Page
-    , session : Session
-    }
+type alias Model = MainModel
+-- type alias Model =
+--     { route   : Route
+--     , page    : Page
+--     , session : Session
+--     }
 
-init : Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url navKey =
+init : Maybe String -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init cred url navKey =
     let
         model = 
             { route  = Route.parseUrl url
-            , page   = NotFound
-            , session = Session.Unauthenticated navKey
+            , page   = NotFoundPage
+            , session = Unauthenticated navKey -- decodeCred navKey cred
             }
     in
-    changeRouteTo (Route.parseUrl url) model -- TODO: we should read on init if we have creds stored
+    changeRouteTo (Route.parseUrl url) model --|> Debug.log ss -- TODO: we should read on init if we have creds stored
    
 
 -- UPDATE
@@ -48,13 +50,13 @@ type Msg
 toSession : Model -> Session
 toSession model =
     case model.page of
-        NotFound ->
+        NotFoundPage ->
             model.session
 
-        Login login ->
+        LoginPage login ->
             Login.toSession login
 
-        CodeProblem codeproblem ->
+        CodingProblemPage codeproblem ->
             CodeProblem.toSession codeproblem
 
         
@@ -66,28 +68,28 @@ changeRouteTo route model =
             toSession model
     in
     case route of
-        Route.PageNotFound ->
-            ( { model | page = NotFound } 
+        PageNotFoundRoute ->
+            ( { model | page = NotFoundPage } 
             , Cmd.none
             )
 
-        Route.Login ->
+        LoginRoute ->
             let
                 (updatedPageModel, upCmd) =
                     Login.init session
             in
-            ( { model | page = Login updatedPageModel}, Cmd.map GotLoginMsg upCmd)
+            ( { model | page = LoginPage updatedPageModel}, Cmd.map GotLoginMsg upCmd)
             
                 
                 -- |> updateWith Login GotLoginMsg model
 
-        Route.CodeProblem ->
+        CodingProblemRoute ->
             -- CodeProblem.init session
             let
                 (updatedPageModel, upCmd) =
                     CodeProblem.init session
             in
-            ( { model | page = CodeProblem updatedPageModel}, Cmd.map GotCodeProblemMsg upCmd)
+            ( { model | page = CodingProblemPage updatedPageModel}, Cmd.map GotCodeProblemMsg upCmd)
                 -- |> updateWith CodeProblem GotCodeProblemMsg model
         -- TODO: also add logout option
 
@@ -110,28 +112,28 @@ update msg model =
         ( UrlChanged url, _ )                         ->
             changeRouteTo (Route.parseUrl url) model
 
-        ( GotPageNotFound, NotFound )                 ->
-            ( { model | page = NotFound } 
+        ( GotPageNotFound, NotFoundPage )                 ->
+            ( { model | page = NotFoundPage } 
             , Cmd.none
             )
 
-        ( GotLoginMsg subMsg, Login login )           -> 
+        ( GotLoginMsg subMsg, LoginPage login )           -> 
             -- Login.update subMsg login 
             --     |> updateWith Login GotLoginMsg model
             let
                 (updatedPageModel, upCmd) =
                     Login.update subMsg login
             in
-            ( { model | page = Login updatedPageModel}, Cmd.map GotLoginMsg upCmd)
+            ( { model | page = LoginPage updatedPageModel}, Cmd.map GotLoginMsg upCmd)
 
-        ( GotCodeProblemMsg subMsg, CodeProblem cp )  -> 
+        ( GotCodeProblemMsg subMsg, CodingProblemPage cp )  -> 
             -- CodeProblem.update subMsg cp 
             --     |> updateWith CodeProblem GotCodeProblemMsg model
             let
                 (updatedPageModel, upCmd) =
                     CodeProblem.update subMsg cp
             in
-            ( { model | page = CodeProblem updatedPageModel}, Cmd.map GotCodeProblemMsg upCmd)
+            ( { model | page = CodingProblemPage updatedPageModel}, Cmd.map GotCodeProblemMsg upCmd)
 
         ( _, _ )                                      -> 
             ( model, Cmd.none )
@@ -157,27 +159,27 @@ view model =
             }
     in
     case model.page of
-        NotFound                ->
-            Page.view Page.NotFound NotFound.view
+        NotFoundPage                ->
+            Page.view NotFoundPage NotFound.view
 
-        Login login             ->
-            viewPage (Login login) GotLoginMsg (Login.view login)
+        LoginPage login             ->
+            viewPage (LoginPage login) GotLoginMsg (Login.view login)
 
-        CodeProblem codeProblem ->
-            viewPage (CodeProblem codeProblem) GotCodeProblemMsg (CodeProblem.view codeProblem)
+        CodingProblemPage codeProblem ->
+            viewPage (CodingProblemPage codeProblem) GotCodeProblemMsg (CodeProblem.view codeProblem)
 
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.page of
-        NotFound                ->
-            Sub.none |> Debug.log ("notFound")
+        NotFoundPage                ->
+            Sub.none
 
-        Login login             ->
+        LoginPage login             ->
             Sub.map GotLoginMsg (Login.subscriptions login)
 
-        CodeProblem codeProblem ->
+        CodingProblemPage codeProblem ->
             Sub.map GotCodeProblemMsg (CodeProblem.subscriptions codeProblem)
     
     
@@ -186,7 +188,7 @@ subscriptions model =
 
 -- MAIN
 
-main : Program Value Model Msg
+main : Program (Maybe String) Model Msg
 main =
   Browser.application 
     { init          = init

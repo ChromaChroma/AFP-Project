@@ -1,4 +1,4 @@
-module Page exposing (Page(..),view)
+module Page exposing (view)
 
 import Browser                         exposing (Document)
 import Html                            exposing (..)
@@ -7,13 +7,13 @@ import Html.Events                     exposing (onClick)
 import Page.Login       as Login
 import Page.CodeProblem as CodeProblem
 import Debug
-import Session                         exposing (Session, isLoggedIn)
+import Session                         exposing (isLoggedIn)
 import Maybe exposing (Maybe(..), withDefault)
-
-type Page 
-    = NotFound
-    | Login       Login.Model
-    | CodeProblem CodeProblem.Model
+import Utils.Types exposing (..)
+-- type Page 
+--     = NotFoundPage
+--     | LoginPage         Login.Model
+--     | CodingProblemPage CodeProblem.Model
 
 
 -- VIEW
@@ -29,7 +29,7 @@ viewHeader page =
     header [ class "header" ]
         [ div [ class "logo" ] [ text "Coding Problems" ]
         , case page of
-            CodeProblem model ->            
+            CodingProblemPage model ->            
                 viewNavMenu (Just model.session) [ "/login" ]
 
             _ -> viewNavMenu Nothing []

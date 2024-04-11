@@ -8,38 +8,23 @@ import Html.Events           exposing (onClick, onInput, onSubmit, on)
 import Http
 import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
-import Session               exposing (Session, getCred, getNavKey)
+import Session               exposing (getCred, getNavKey)
+import Utils.Types exposing (..)
 
 
 -- MODEL
 
-type alias Model =
-    { session            : Session
-    , state              : Status
-    , uploadedSubmission : Maybe String -- File
-    }
+type alias Model = CodeProblemModel
+-- type alias Model =
+--     { session            : Session
+--     , state              : Status
+--     , uploadedSubmission : Maybe String -- File
+--     }
 
-type Status 
-  = Failure
-  | Loading
-  | Success CodeProblem
-
-type ProblemDifficulty 
-  = Easy 
-  | Intermediate 
-  | Difficult 
-  | Extreme
-
-type alias CodeProblem =
-  { id           : String
-  , deadline     : String
-  , problemTags  : List String
-  , difficulty   : ProblemDifficulty
-  , title        : String
-  , description  : String
---   , testCases    : List String
-  , templateCode : String
-  }
+-- type Status 
+--   = Failure
+--   | Loading
+--   | Success CodingProblem
 
 init : Session -> (Model, Cmd Msg)
 -- init = (Loading, getCodeProblem)
@@ -54,7 +39,7 @@ init session = ( { session            = session
 -- UPDATE
 
 type Msg
-  = GotCodeProblem      (Result Http.Error CodeProblem)
+  = GotCodeProblem      (Result Http.Error CodingProblem)
   | Reload
   | DownloadTemplate    String
   | UploadSubmission
@@ -222,9 +207,9 @@ getCodeProblem =
     , expect = Http.expectJson GotCodeProblem codeProblemDecoder
     }
 
-codeProblemDecoder : Decoder CodeProblem
+codeProblemDecoder : Decoder CodingProblem
 codeProblemDecoder =
-  Decode.map7 CodeProblem
+  Decode.map7 CodingProblem
     (field "_id" string)
     (field "deadline" string)
     (field "problemTags" (list string))

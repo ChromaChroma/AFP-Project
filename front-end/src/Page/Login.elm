@@ -12,22 +12,19 @@ import Browser.Navigation as Nav
 import Json.Encode        as Encode 
 import Page.CodeProblem   as CodeProblem
 import Route                             exposing (pushUrl)
-import Error                             exposing (errorToStr)
-import Session                           exposing (Session,Cred, getNavKey)
-
+import Utils.Error                             exposing (errorToStr)
+import Session                           exposing ( getNavKey)
+import Utils.Types exposing (..)
 -- TODO: fix routing, handled access correctly (Using session) & refreshing of token, show output of code, abstract Http with endpoints, update css styling, register page, choce codeproblem page
 
 -- MODEL
 
-type alias Model =
-  { session : Session 
-  , user    : User
-  }
+-- type alias Model =
+--   { session : Session 
+--   , user    : User
+--   }
 
-type alias User =
-  { username : String
-  , password : String
-  }
+type alias Model = LoginModel
 
 -- type alias Cred =
 --     { access  : String
@@ -53,9 +50,7 @@ type Msg
   | CompletedLogin (Result Http.Error Cred)
   | GotSession Session
 
-type Field
-  = Username
-  | Password
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -78,8 +73,8 @@ update msg model =
 
         CompletedLogin (Ok cred) ->
             let
-                updateModel = { model | session = Session.Authenticated (getNavKey model.session) cred }
-                request =  Route.pushUrl Route.CodeProblem (getNavKey model.session)
+                updateModel = { model | session = Authenticated (getNavKey model.session) cred }
+                request =  Route.pushUrl CodingProblemRoute (getNavKey model.session)
             in
             ( updateModel
             , Cmd.batch [request, Session.store cred] --request
@@ -89,7 +84,7 @@ update msg model =
 
         GotSession session ->
             ( { model | session = session }
-            , Route.pushUrl Route.CodeProblem (getNavKey model.session) |> Debug.log "ppppppppppp"
+            , Route.pushUrl CodingProblemRoute (getNavKey model.session) |> Debug.log "ppppppppppp"
             )
 
 
