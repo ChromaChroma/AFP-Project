@@ -18,10 +18,12 @@ import Task
 
 -- MODEL
 
-
+{-| Represents an alias for the CodeProblemModel
+-}
 type alias Model = CodeProblemModel
 
-
+{-| This function initilize the coding problem page.
+-}
 init : Session -> (Model, Cmd Msg)
 init session = ( { session            = session
                  , state              = Loading
@@ -34,7 +36,8 @@ init session = ( { session            = session
 
 -- UPDATE
 
-
+{-| Represents the different messages that can be called.
+-}
 type Msg
   = GotCodeProblem      (Result Http.Error CodingProblem)
   | Reload
@@ -45,7 +48,8 @@ type Msg
   | GotSession          Session
   | FileSelected (List File)
 
-
+{-| This function updates the model state based on the received messages.
+-}
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -114,14 +118,18 @@ update msg model =
         , Cmd.none 
         )
 
-
+{-| This function updates current state of retrieving the coding problem data in the model state,
+    either failed, loading or success.
+-}
 updateState : (Status -> Status) -> Model -> ( Model, Cmd Msg )
 updateState transform model =
     ( { model | state = transform model.state }
     , Cmd.none 
     )
 
-
+{-| This function converts the file data into a string and
+    passes the contents to the GotFile message.
+-}
 read : File -> Cmd Msg
 read file =
   Task.perform GotFile (File.toString file)
@@ -129,7 +137,9 @@ read file =
 
 -- SUBSCRIPTIONS
 
-
+{-| This function listens to on local storage change events,
+    to update the session with the current authentication information.
+-}
 subscriptions : Model -> Sub Msg
 subscriptions model = 
     Session.changes GotSession (getNavKey model.session)
@@ -137,7 +147,8 @@ subscriptions model =
 
 -- VIEW
 
-
+{-| This function defines the view of the coding problem page.
+-}
 view : Model -> { title : String, content : Html Msg }
 view model =
     { title   = "CodeProblem"
@@ -146,7 +157,8 @@ view model =
             [ viewHandler model ]
     }
 
-
+{-| This function handles the current view based on the current model state.
+-}
 viewHandler : Model -> Html Msg
 viewHandler model =
     case model.state of
@@ -159,7 +171,8 @@ viewHandler model =
         Success problem ->
             viewLoadedCodeProblem model problem
 
-
+{-| This function defines the view when we fail to retrieve the coding problem data.
+-}
 viewFailedToLoad : Html Msg
 viewFailedToLoad =
     div [ class "problem-container" ]
@@ -170,13 +183,15 @@ viewFailedToLoad =
             ]
         ]
 
-
+{-| This function defines the view when we are retrieving the coding problem data.
+-}
 viewLoadingCodingProblem : Html Msg
 viewLoadingCodingProblem =
     div [ class "problem-container" ]
                 [ p [ class "loading-message" ] [ text "Loading..." ] ]
 
-
+{-| This function defines the view when we successfully retrieved to coding problem data.
+-}
 viewLoadedCodeProblem : Model -> CodingProblem -> Html Msg
 viewLoadedCodeProblem model problem = 
     div [ class "problem-container" ]
@@ -219,13 +234,15 @@ tagToHtml tag =
 
 -- PORT
 
-
+{-| This port passes the content and opens it text in a new window tab.
+-}
 port openPlainTextTabPort : String -> Cmd msg
 
 
 -- HTTP
 
-
+{-| This function request the coding problem from the server
+-}
 getCodeProblem : Cmd Msg
 getCodeProblem =
     Http.get
@@ -233,7 +250,9 @@ getCodeProblem =
     , expect = Http.expectJson GotCodeProblem codeProblemDecoder
     }
 
-
+{-| This function sends implementation of the use to the server,
+    it retrieves whether to code is correct or not.
+-}
 submitFile : String -> String -> Cmd Msg
 submitFile access file =
     let
@@ -261,7 +280,8 @@ submitFile access file =
 
 -- EXPORT
 
-
+{-| This function returs the session of the model state.
+-}
 toSession : Model -> Session
 toSession model =
     model.session

@@ -6,7 +6,8 @@ import Html.Attributes exposing (alt, class, id, src, tabindex)
 
 -- VIEW
 
-
+{-| This function defines the pages view when a page is not found.
+-}
 view : { title : String, content : Html msg }
 view =
     { title = "Page Not Found"

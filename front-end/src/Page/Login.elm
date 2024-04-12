@@ -18,10 +18,12 @@ import Utils.Transcoder                  exposing (..)
 
 -- MODEL
 
-
+{-| Represents an alias for the LoginModel
+-}
 type alias Model = LoginModel
 
-
+{-| This function initilize the login page.
+-}
 init : Session -> (Model, Cmd msg)
 init session = 
     ({ session = session
@@ -36,14 +38,16 @@ init session =
 
 -- UPDATE
 
-
+{-| Represents the different messages that can be called.
+-}
 type Msg
   = UpdateInput    Field String
   | SubmitLogin
   | CompletedLogin (Result Http.Error Cred)
   | GotSession     Session
 
-
+{-| This function updates the model state based on the received messages.
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -79,7 +83,8 @@ update msg model =
             , Route.pushUrl CodingProblemRoute (getNavKey model.session)
             )
 
-
+{-| This function updates the user details of the model state.
+-}
 updateCred : (User -> User) -> Model -> ( Model, Cmd Msg )
 updateCred transform model =
     ( { model | user = transform model.user }
@@ -89,7 +94,9 @@ updateCred transform model =
 
 -- SUBSCRIPTIONS
 
-
+{-| This function listens to on local storage change events,
+    to update the session with the current authentication information.
+-}
 subscriptions : Model -> Sub Msg
 subscriptions model = 
     Session.changes GotSession (getNavKey model.session)
@@ -97,7 +104,8 @@ subscriptions model =
 
 -- VIEW
 
-
+{-| This function defines the view of the login page.
+-}
 view : Model -> { title : String, content : Html Msg }
 view model =
     { title = "Login"
@@ -129,7 +137,8 @@ view model =
 
 -- HTTP
 
-
+{-| This function sends the submitted user login data to the server
+-}
 submitRequest : User -> Cmd Msg
 submitRequest user =
     let
@@ -148,7 +157,8 @@ submitRequest user =
 
 -- EXPORT
 
-
+{-| This function returs the session of the model state.
+-}
 toSession : Model -> Session
 toSession model =
     model.session

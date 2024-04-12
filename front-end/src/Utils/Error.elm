@@ -6,7 +6,8 @@ import String exposing(fromInt)
 
 -- HTTP ERROR MESSAGES
 
-
+{-| This function converts a Http error messages to a string.
+-}
 errorToStr : Http.Error -> String
 errorToStr error =
     case error of
