@@ -38,7 +38,6 @@ library
     hs-source-dirs:   lib
     exposed-modules:    
         Api.CodeProblem
-      , Types
       , Database.Repository
       , Database.Config
       , Security.API

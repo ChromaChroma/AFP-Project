@@ -4,7 +4,6 @@
 module Types.Attempt where 
   
 import Data.Aeson                 (FromJSON, ToJSON)
-
 import Data.Text                  (Text)
 import Data.Time                  (UTCTime)
 import Data.UUID                  (UUID)
@@ -14,7 +13,6 @@ import Data.UUID                  (UUID)
 import GHC.Generics               (Generic)
 import Data.Typeable              (Typeable)
 import Servant.Auth.JWT           (FromJWT, ToJWT)
-
 -- | Project Dependency
 import Types.CodingProblem
 

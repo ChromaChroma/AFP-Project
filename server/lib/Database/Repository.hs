@@ -10,7 +10,7 @@ import Data.UUID                    (UUID)
 import Servant              
 -- | Project imports
 import Types.CodingProblem
-import qualified Types.User as S (User(..))
+import qualified Types.User as S    (User(..), UserId)
 
 -- 
 -- Util functions
@@ -24,7 +24,7 @@ unwrapValue (x:_) = pure x
 -- 
 
 -- | Gets user by id
-getUserById :: Connection -> UUID -> IO S.User
+getUserById :: Connection -> S.UserId -> IO S.User
 getUserById conn uid = do
   res <- query conn "SELECT * from Users where id = ? LIMIT 1;" (Only uid)   
   unwrapValue res

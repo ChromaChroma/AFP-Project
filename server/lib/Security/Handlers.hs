@@ -26,7 +26,7 @@ import Servant                   (err401, err404)
 -- | Project imports
 import Database.Repository       (authenticateUser, getUserById)
 import Security.Auth             (signToken)
-import Types.User                (User(..))
+import Types.User                (User(..), UserId)
 import Security.Claims           (RefreshClaims, accessClaims, refreshClaims, subjectClaim)
 
 -- | Data transfer object for a login request
@@ -37,7 +37,7 @@ data LoginRequest = LoginRequest
 
 -- | Data transfer object for a login response
 data LoginResponse = LoginResponse
-  { access :: !Text
+  { access  :: !Text
   , refresh :: !Text
   } deriving (Generic, ToJSON)
 
@@ -79,5 +79,5 @@ refreshTokenHandler jwk (Just claims@(subjectClaim -> Just uid)) = do
 refreshTokenHandler _ _ = throwM err401
 
 -- | Returns the requested user.
-getUserHandler :: (MonadThrow m, MonadIO m) => Connection -> UUID -> m User
+getUserHandler :: (MonadThrow m, MonadIO m) => Connection -> UserId -> m User
 getUserHandler conn uid = liftIO $ getUserById conn uid

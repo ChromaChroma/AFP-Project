@@ -15,7 +15,7 @@ import Servant.Server.Generic (AsServerT)
 import Api.CodeProblem
 import Security.App           (App)
 import Security.Handlers      (LoginRequest , LoginResponse , getUserHandler , loginHandler , refreshTokenHandler)
-import Types.User             (User(..))
+import Types.User             (User(..), UserId)
 import Security.Auth          (AuthJwtAccess, AuthJwtRefresh)
 import Security.Claims        (AccessClaims)
 
@@ -44,7 +44,7 @@ api conn jwk = Api
 -- | Api datatype for secured endpoints
 newtype SecuredRoutes mode = SecuredRoutes
   { -- GET /users/:userId
-    getUser :: mode :- "users" :> Capture "userId" UUID :> Get '[JSON] User
+    getUser :: mode :- "users" :> Capture "userId" UserId :> Get '[JSON] User
   }
   deriving Generic
 
