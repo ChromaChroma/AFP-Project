@@ -1,87 +1,192 @@
 module Main exposing (main)
 
-import Browser exposing (Document)
-import Html exposing (..)
-import Html.Events exposing (..)
+import Browser                           exposing (Document, UrlRequest)
+import Html                              exposing (..)
+import Html.Events                       exposing (..)
+import Url                               exposing (Url)
+import Debug
+import Browser.Navigation as Nav
+import Page   
+import Utils.Types                       exposing (..)
+import Page.Login         as Login
+import Page.CodeProblem   as CodeProblem
+import Page.NotFound      as NotFound
+import Json.Decode        as Decode      exposing (Value)
+import Utils.Route        as Route                           
+import Utils.Session      as Session     exposing (getNavKey, decodeCred)
 
-import Page              exposing (Page)
--- import Page.Register    as Register
-import Page.Login       as Login
-import Page.CodeProblem as CodeProblem
-import Json.Decode as Decode exposing (Value)
 
 -- MODEL
 
-type Model
-    = Login Login.Model
-    | CodeProblem CodeProblem.Model
 
-init : () -> (Model, Cmd Msg)
-init _ = let (loginModel, loginCmd) =
-                    CodeProblem.init
-            in
-            (CodeProblem loginModel, Cmd.map GotCodeProblemMsg loginCmd)
--- init _ = let (loginModel, loginCmd) =
---                     Login.init
---             in
---             (Login loginModel, loginCmd)
+type alias Model = MainModel
+
+
+init : Maybe String -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init cred url navKey =
+    let
+        model = 
+            { route  = Route.parseUrl url
+            , page   = NotFoundPage
+            , session = Unauthenticated navKey -- decodeCred navKey cred
+            }
+    in
+    changeRouteTo (Route.parseUrl url) model -- TODO: we should read on init if we have creds stored
+   
 
 -- UPDATE
 
+
 type Msg 
-    = GotLoginMsg Login.Msg
+    = GotPageNotFound
+    | GotLoginMsg       Login.Msg
     | GotCodeProblemMsg CodeProblem.Msg
+    | LinkClicked       UrlRequest
+    | UrlChanged        Url 
+
+
+toSession : Model -> Session
+toSession model =
+    case model.page of
+        NotFoundPage ->
+            model.session
+
+        LoginPage login ->
+            Login.toSession login
+
+        CodingProblemPage codeproblem ->
+            CodeProblem.toSession codeproblem
+
+        
+changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo route model =
+    let
+        session =
+            toSession model
+    in
+    case route of
+        PageNotFoundRoute ->
+            ( { model | page = NotFoundPage } 
+            , Cmd.none
+            )
+
+        LoginRoute ->
+            let
+                (updatedPageModel, upCmd) =
+                    Login.init session
+            in
+            ( { model | page = LoginPage updatedPageModel}
+            , Cmd.map GotLoginMsg upCmd
+            )
+
+        CodingProblemRoute ->
+            let
+                (updatedPageModel, upCmd) =
+                    CodeProblem.init session
+            in
+            ( { model | page = CodingProblemPage updatedPageModel}
+            , Cmd.map GotCodeProblemMsg upCmd
+            )
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case (msg, model) of
-        (GotLoginMsg subMsg , Login login) -> Login.update subMsg login |> updateWith Login GotLoginMsg model
-        (GotCodeProblemMsg subMsg , CodeProblem cp) -> CodeProblem.update subMsg cp |> updateWith CodeProblem GotCodeProblemMsg model
-        ( _, _ ) -> ( model, Cmd.none )
+    case ( msg, model.page ) of
+        ( LinkClicked urlRequest, _ )                       ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Nav.pushUrl (getNavKey model.session) (Url.toString url) 
+                    )
 
-updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
-updateWith toModel toMsg model ( subModel, subCmd ) =
-    ( toModel subModel
-    , Cmd.map toMsg subCmd
-    )
+                Browser.External url ->
+                    ( model
+                    , Nav.load url
+                    )
+
+        ( UrlChanged url, _ )                               ->
+            changeRouteTo (Route.parseUrl url) model
+
+        ( GotPageNotFound, NotFoundPage )                   ->
+            ( { model | page = NotFoundPage } 
+            , Cmd.none
+            )
+
+        ( GotLoginMsg subMsg, LoginPage login )             -> 
+            let
+                (updatedPageModel, upCmd) =
+                    Login.update subMsg login
+            in
+            ( { model | page = LoginPage updatedPageModel}
+            , Cmd.map GotLoginMsg upCmd
+            )
+
+        ( GotCodeProblemMsg subMsg, CodingProblemPage cp )  -> 
+            let
+                (updatedPageModel, upCmd) =
+                    CodeProblem.update subMsg cp
+            in
+            ( { model | page = CodingProblemPage updatedPageModel}
+            , Cmd.map GotCodeProblemMsg upCmd
+            )
+
+        ( _, _ )                                            -> 
+            ( model
+            , Cmd.none 
+            )
+
 
 -- VIEW
 
+
 view : Model -> Document Msg
 view model =
-    let viewPage page toMsg config =
+    let 
+        viewPage page toMsg config =
             let
                 { title, body } =
-                    Page.view page config
+                    Page.view page config 
             in
             { title = title
             , body = List.map (Html.map toMsg) body
             }
     in
-    case model of
-        Login login ->
-            viewPage Page.Login GotLoginMsg (Login.view login)
+    case model.page of
+        NotFoundPage                ->
+            Page.view NotFoundPage NotFound.view
 
-        CodeProblem codeProblem ->
-            viewPage Page.CodeProblem GotCodeProblemMsg (CodeProblem.view codeProblem)
+        LoginPage login             ->
+            viewPage (LoginPage login) GotLoginMsg (Login.view login)
+
+        CodingProblemPage codeProblem ->
+            viewPage (CodingProblemPage codeProblem) GotCodeProblemMsg (CodeProblem.view codeProblem)
+
 
 -- SUBSCRIPTIONS
 
-subscriptions : Model -> Sub Msg
-subscriptions _ = Sub.none
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.page of
+        NotFoundPage                ->
+            Sub.none
+
+        LoginPage login             ->
+            Sub.map GotLoginMsg (Login.subscriptions login)
+
+        CodingProblemPage codeProblem ->
+            Sub.map GotCodeProblemMsg (CodeProblem.subscriptions codeProblem)
+    
 
 -- MAIN
 
-extractBody : Document Msg -> Html Msg
-extractBody document =
-    div [] document.body
-
-main : Program () Model Msg
+main : Program (Maybe String) Model Msg
 main =
-  Browser.element
+  Browser.application 
     { init          = init
     , update        = update
     , subscriptions = subscriptions
-    , view          = \model -> view model |> extractBody
+    , view          = view
+    , onUrlRequest  = LinkClicked
+    , onUrlChange   = UrlChanged
     }

@@ -10,17 +10,54 @@
 <body>
     <div id="elm-container"></div>
     <script src="elm.js"></script>
-    <!-- <script src="./src/Main.elm"></script> -->
     <script type="module">
+        var storageKey = "store";
+        var flags = localStorage.getItem(storageKey);
+
         var app = Elm.Main.init({
+            flags: flags,
             node: document.getElementById('elm-container')
         });
 
-        // Handle Ports
+        // Handle Ports      
         app.ports.openPlainTextTabPort.subscribe(function (content) {
-            var newTab = window.open();
-            newTab.document.body.innerText = content;
+            // Open new window tab and load template code content
+            var newTab      = window.open();
+            var preElement  = newTab.document.createElement('pre');
+            var codeElement = newTab.document.createElement('code');
+
+            codeElement.textContent = content;
+            preElement.appendChild(codeElement);
+            newTab.document.body.appendChild(preElement);
+            
+            // Add event listener to select all text when template code block is clicked
+            preElement.addEventListener('click', function() {
+                var selection = newTab.getSelection();
+                var range     = newTab.document.createRange();
+
+                range.selectNodeContents(this);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
         });
+
+        app.ports.storeV.subscribe(function (cred) {
+            if (cred === null) {
+              // Removing credentials from local storage
+              localStorage.removeItem(storageKey);
+            } else {
+              // ADD credentials to local storage
+              localStorage.setItem(storageKey, JSON.stringify(cred));
+            }
+    
+          });
+
+          window.addEventListener("storage", function(event) {
+            // Update credentials on change
+            if (event.storageArea === localStorage && event.key === storageKey) {
+              app.ports.onStoreChange.send(event.newValue);
+            }
+          }, false);
     </script>
 </body>
 </html>

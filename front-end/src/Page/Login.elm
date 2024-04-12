@@ -1,174 +1,164 @@
-module Page.Login exposing (Model, Msg, init, subscriptions, update, view)
+module Page.Login exposing (Model, Msg, init, subscriptions, update, view, toSession)
 
--- import Api exposing (Cred)
--- import Browser.Navigation as Nav
-import Browser exposing (Document)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Browser                           exposing (Document)
+import Html                              exposing (..)
+import Html.Attributes                   exposing (..)
+import Html.Events                       exposing (..)
+import Debug                             exposing (log)
+import Task                              exposing (Task)
 import Http
-import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
-import Json.Encode as Encode 
-import Task exposing (Task)
-import Page.CodeProblem as CodeProblem
-import Debug exposing (log)
+import Browser.Navigation as Nav
+import Page.CodeProblem   as CodeProblem
+import Utils.Route        as Route       exposing (pushUrl)
+import Utils.Error        as Error       exposing (errorToStr)
+import Utils.Session      as Session     exposing (getNavKey)
+import Utils.Types                       exposing (..)
+import Utils.Transcoder                  exposing (..)
+
 
 -- MODEL
 
-type alias Model =
-  { user: User
-  }
+{-| Represents an alias for the LoginModel
+-}
+type alias Model = LoginModel
 
-type alias User =
-  { username : String
-  , password : String
-  }
-
-init : (Model, Cmd msg)
-init = 
-    ({ user    =
+{-| This function initilize the login page.
+-}
+init : Session -> (Model, Cmd msg)
+init session = 
+    ({ session = session
+     , user   =
             { username = ""
             , password = ""
             }
-     }, Cmd.none)
+     }
+    , Cmd.none
+    )
+
 
 -- UPDATE
 
+{-| Represents the different messages that can be called.
+-}
 type Msg
-  = SetUsername String
-  | SetPassword String
+  = UpdateInput    Field String
   | SubmitLogin
-  | CompletedLogin (Result Http.Error User)
+  | CompletedLogin (Result Http.Error Cred)
+  | GotSession     Session
 
+{-| This function updates the model state based on the received messages.
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SubmitLogin -> --(model, Cmd.msg GotCodeProblemMsg CodeProblem.Loading)
-            let request = submitRequest model.user
-            in ( model, request)
+        SubmitLogin                   ->
+            let 
+                request = submitRequest model.user
+            in 
+            ( model
+            , request
+            )
 
-
-        SetUsername username ->
+        UpdateInput Username username ->
             updateCred (\user -> { user | username = username }) model
 
-        SetPassword password ->
+        UpdateInput Password password ->
             updateCred (\user -> { user | password = password }) model
 
-        CompletedLogin (Ok user) ->
-            ( model
-            , Cmd.none
-            ) |> Debug.log "New model"
+        CompletedLogin (Ok cred)      ->
+            let
+                updateModel = { model | session = Authenticated (getNavKey model.session) cred }
+                request =  Route.pushUrl CodingProblemRoute (getNavKey updateModel.session)
+            in
+            ( updateModel
+            , Cmd.batch [request, Session.store cred]
+            ) 
 
-        CompletedLogin (Err _) -> (model, Cmd.none)
+        CompletedLogin (Err errorMsg) ->
+            (model, Cmd.none) 
+                |> Debug.log (errorToStr errorMsg)
 
+        GotSession session            ->
+            ( { model | session = session }
+            , Route.pushUrl CodingProblemRoute (getNavKey model.session)
+            )
 
+{-| This function updates the user details of the model state.
+-}
 updateCred : (User -> User) -> Model -> ( Model, Cmd Msg )
 updateCred transform model =
-    ( { model | user = transform model.user }, Cmd.none )
+    ( { model | user = transform model.user }
+    , Cmd.none
+    )
 
 
 -- SUBSCRIPTIONS
 
+{-| This function listens to on local storage change events,
+    to update the session with the current authentication information.
+-}
 subscriptions : Model -> Sub Msg
-subscriptions model = Sub.none
+subscriptions model = 
+    Session.changes GotSession (getNavKey model.session)
+
 
 -- VIEW
 
+{-| This function defines the view of the login page.
+-}
 view : Model -> { title : String, content : Html Msg }
 view model =
     { title = "Login"
     , content =
-        div [ class "cred-page" ]
-            [ div [ class "container page" ]
-                [ div [ class "row" ]
-                    [ div [ class "col-md-6 offset-md-3 col-xs-12" ]
-                        [ h1 [ class "text-xs-center" ] [ text "Sign in" ]
-                        , viewUserLogin model.user
-                        ]
-                    ]
+        div [ class "login-container" ]
+            [ h2 [] [ text "Login" ]
+            , Html.form [ class "login-form", onSubmit SubmitLogin ]
+                [ label [ for "username" ] [ text "Username" ]
+                , input [ type_       "text"
+                                      , id "username"
+                        , name        "username"
+                        , placeholder "Enter your username"
+                        , value       model.user.username
+                        , onInput     (UpdateInput Username) 
+                        ] []
+                , label [ for "password" ] [ text "Password" ]
+                , input [ type_       "password"
+                        , id          "password"
+                                      , name "password"
+                        , placeholder "Enter your password"
+                        , value       model.user.password
+                        , onInput     (UpdateInput Password) 
+                        ] []
+                , button [ type_ "submit" ] [ text "Login" ]
                 ]
             ]
-    }
-
-viewUserLogin : User -> Html Msg
-viewUserLogin form =
-    Html.form [ onSubmit SubmitLogin ]
-        [ fieldset [ class "form-group" ]
-            [ input
-                [ class "form-control form-control-lg"
-                , placeholder "username"
-                , onInput SetUsername
-                , value form.username
-                ]
-                []
-            ]
-        , fieldset [ class "form-group" ]
-            [ input
-                [ class "form-control form-control-lg"
-                , type_ "password"
-                , placeholder "Password"
-                , onInput SetPassword
-                , value form.password
-                ]
-                []
-            ]
-        , button [ class "btn btn-lg btn-primary pull-xs-right" ]
-            [ text "Sign in" ]
-        ]
-
+        }
 
 
 -- HTTP
 
-
-userEncoder : User -> Encode.Value
-userEncoder user = 
-    Encode.object 
-        [("username", Encode.string user.username)
-        ,("password", Encode.string user.password)
-        ]
-
-userDecoder : Decoder User
-userDecoder =
-  Decode.map2 User
-    (Decode.field "username" Decode.string)
-    (Decode.field "password" Decode.string)
-
--- handleResponse : Result Http.Error User -> Msg
--- handleResponse result =
---     case result of
---         Ok user ->
---             -- Handle successful response here, perhaps by sending a success message
---             -- For example:
---             ValidationSuccessful user
-
---         Err _ ->
---             -- Handle error response here, perhaps by sending an error message
---             -- For example:
---             ValidationFailed "error"
-
+{-| This function sends the submitted user login data to the server
+-}
 submitRequest : User -> Cmd Msg
 submitRequest user =
-    Http.post
-        { body = Http.jsonBody (userEncoder user)
-         , expect = Http.expectJson CompletedLogin userDecoder
-        , url = "http://local-host:8000/validate"
-        }
+    let
+        request =
+            { method = "POST"
+            , headers = []
+            , url = "http://localhost:8080/login"
+            , body = Http.jsonBody (userEncoder user)
+            , expect = Http.expectJson CompletedLogin credDecoder
+            , timeout = Nothing
+            , tracker = Nothing
+            }
+    in
+    Http.request request
 
--- sendRequest : User -> Cmd Msg
--- sendRequest data =
---     postRequest data
---         |> Task.attempt CompletedLogin
 
--- postRequest : User -> Cmd Msg
--- postRequest user =
---     let
---         url = "https://example.com/api/endpoint"
---         body = userEncoder user
---         requestConfig =
---             { expect = Http.expectJson CompletedLogin
---             , body = Http.jsonBody body
---             , url = url
---             }
---     in
---     Http.post requestConfig
+-- EXPORT
+
+{-| This function returs the session of the model state.
+-}
+toSession : Model -> Session
+toSession model =
+    model.session

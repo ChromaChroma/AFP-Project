@@ -66,6 +66,7 @@ library
 
       -- | Servant & Web Server dependencies
       , wai
+      , wai-cors
       , warp
       , servant         ^>= 0.20
       , servant-server  ^>= 0.20
