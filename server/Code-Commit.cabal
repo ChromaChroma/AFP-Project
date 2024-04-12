@@ -39,17 +39,18 @@ library
     exposed-modules:    
         Api.CodeProblem
       , Types
-      , Database
+      , Database.Repository
       , Database.Config
-      , Dummy
       , Security.API
       , Security.App
       , Security.Claims
-      , Security.User
       , Security.Auth
       , Security.Handlers 
       , System.Checks
       , System.Processing
+      , Types.Attempt
+      , Types.CodingProblem
+      , Types.User
     build-depends:  
         base            >=4.17.2.1
       , containers

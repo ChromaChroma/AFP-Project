@@ -20,7 +20,7 @@ import System.Directory       (createDirectoryIfMissing, removeDirectoryRecursiv
 import Control.Exception      (ErrorCall, handle)
 import System.IO.Error        (catchIOError)
 -- | Project imports
-import Types
+import Types.CodingProblem
 
 import Debug.Trace (trace)
 

@@ -22,11 +22,10 @@ import Security.App               (App)
 import Security.Auth              (AuthJwtAccess)
 import Servant.Server.Generic     (AsServerT)
 -- | Project imports
-import Types
+import Types.CodingProblem
 import Security.Claims            (AccessClaims, extractSub)
 import System.Processing          (processAttempt)
-import qualified Database as DB   (getCodingProblems, getCodingProblemById, getCodingProblemCasesById)
-import Dummy
+import qualified Database.Repository as DB (getCodingProblems, getCodingProblemById, getCodingProblemCasesById)
 
 import Debug.Trace (trace)
 
@@ -64,15 +63,19 @@ type SubmitCodingAttempt mode = mode :- AuthJwtAccess
 
 {- Handlers -}
 
+-- | Handlers for 'CodingProblemAPI'
 handlers :: Connection -> CodingProblemAPI (AsServerT App)
 handlers conn = getCodingProblems conn :<|> getCodingProblem conn :<|> submitAttempt conn 
 
+-- | Handlers for 'GetCodingProblems'
 getCodingProblems :: (MonadThrow m, MonadIO m) => Connection -> m [CodingProblem]
 getCodingProblems = liftIO . DB.getCodingProblems
 
+-- | Handlers for 'GetCodingProblem'
 getCodingProblem :: (MonadThrow m, MonadIO m) => Connection -> UUID -> m CodingProblem
 getCodingProblem conn = liftIO . DB.getCodingProblemById conn
   
+-- | Handlers for 'SubmitCodingAttempt'
 submitAttempt :: (MonadThrow m, MonadIO m) => Connection ->  Maybe AccessClaims -> UUID -> AttemptDTO -> m Text
 submitAttempt conn (Just c) pId (AttemptDTO code) = do 
                                                     uid   <- extractSub c

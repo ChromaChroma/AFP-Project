@@ -25,12 +25,11 @@ ghcCheckIO ver = do
 -- | Checks if GHC version is correctly installed on system
 ghcCheck :: String -> IO Bool
 ghcCheck v = 
-  let checkOutput ("The Glorious Glasgow Haskell Compilation System, version ", right) 
+  let errMsg = "GHC " ++ v ++ " needs to be installed and accessible for the server to work properly"
+      checkOutput ("The Glorious Glasgow Haskell Compilation System, version ", right) 
         | right /= v = failMsg ("Wrong version of GHC installed, expected " ++ v ++ ", but was: " ++ show right)
         | otherwise  = succMsg "GHC correctly installed on server"
       checkOutput _  = failMsg errMsg
-      
-      errMsg = "GHC " ++ v ++ " needs to be installed and accessible for the server to work properly"
   in do
   (exitCode, output, _) <- readProcessWithExitCode "ghc" ["--version"] ""
 

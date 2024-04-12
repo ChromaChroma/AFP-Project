@@ -15,10 +15,11 @@ import Servant.Server.Generic (AsServerT)
 import Api.CodeProblem
 import Security.App           (App)
 import Security.Handlers      (LoginRequest , LoginResponse , getUserHandler , loginHandler , refreshTokenHandler)
-import Security.User          (User(..))
+import Types.User             (User(..))
 import Security.Auth          (AuthJwtAccess, AuthJwtRefresh)
 import Security.Claims        (AccessClaims)
 
+-- | API datatype for whole application
 data Api mode = Api  
   { -- | POST /login
     login  :: mode :- "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
@@ -29,6 +30,7 @@ data Api mode = Api
   }
   deriving Generic
 
+-- | API implementatio for whole application
 api :: Connection -> JWK -> Api (AsServerT App)
 api conn jwk = Api
   { login   = loginHandler conn jwk 
@@ -39,14 +41,16 @@ api conn jwk = Api
 
 ----------------------------------------------------
 
+-- | Api datatype for secured endpoints
 newtype SecuredRoutes mode = SecuredRoutes
   { -- GET /users/:userId
     getUser :: mode :- "users" :> Capture "userId" UUID :> Get '[JSON] User
   }
   deriving Generic
 
+-- | Api implementation for secured endpoints
 securedHandlers :: Connection -> Maybe AccessClaims -> SecuredRoutes (AsServerT App)
-securedHandlers conn (Just _) = SecuredRoutes { 
+securedHandlers conn (Just c) = SecuredRoutes { 
   getUser = getUserHandler conn
   }
 securedHandlers _ _        =  throw err401

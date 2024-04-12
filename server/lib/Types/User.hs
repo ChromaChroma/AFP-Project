@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass    #-}
 
-module Security.User (User(..)) where
+module Types.User (User(..)) where
 
 -- | Dependency imports
 import Data.Aeson   (FromJSON, ToJSON)
@@ -9,6 +9,7 @@ import GHC.Generics (Generic)
 import Data.Text    (Text)
 import Database.PostgreSQL.Simple (FromRow, ToRow)
 
+-- | User's account
 data User = User
   { _id      :: !UUID
   , username :: !Text
