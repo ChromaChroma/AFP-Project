@@ -2,6 +2,7 @@
 module Database.Repository where 
 
 -- | Dependency imports
+import Control.Monad                (void)
 import Control.Monad.Catch          (MonadThrow(..), catch)
 import Database.PostgreSQL.Simple
 import Data.List                    (find)
@@ -48,11 +49,10 @@ getCodingProblemCasesById conn cpId = do
 
 -- | Saves a 'CodeProblem' 'Attempt' in the Database
 saveAttempt :: Connection -> NormalAttempt -> IO ()
-saveAttempt conn a@(Attempt uid  d1 d2 (Code pId c) s) = do 
-  execute conn 
+saveAttempt conn (Attempt uid  d1 d2 (Code pId c) s) = do 
+  void $ execute conn 
     "insert into attempts (userId, codingProblemId, submitted_on, completed_on, code, state) values (?, ?, ?, ?, ?, ?);" 
     (uid, pId, d1, d2, c, s) 
-  return ()
 
 -- 
 -- Datasensitive Functions

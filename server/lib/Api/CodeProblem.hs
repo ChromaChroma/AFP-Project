@@ -4,6 +4,7 @@
 module Api.CodeProblem where
 
 -- | Dependency imports
+import Control.Exception          (try)
 import Control.Monad.Catch        (MonadThrow(..))
 import Control.Monad.IO.Class     (liftIO, MonadIO)
 import Crypto.JWT                 
@@ -82,8 +83,13 @@ submitAttempt conn (Just c) pId (AttemptDTO code) = do
                                                     uid        <- extractSub c
                                                     cp         <- liftIO $ DB.getCodingProblemById conn pId
                                                     cases      <- liftIO $ DB.getCodingProblemCasesById conn pId
-                                                    res        <- fromString <$> liftIO (processAttempt uid cp cases code)
-                                                    now        <- liftIO getCurrentTime
-                                                    liftIO $ DB.saveAttempt conn (Attempt uid submitDate now (Code pId code) (Succeeded res))
-                                                    return res
+                                                    rr <- liftIO (try (processAttempt uid cp cases code)  :: IO (Either ServerError String))
+                                                    now <- liftIO getCurrentTime
+
+                                                    let (attemptState, returnValue) = case rr of 
+                                                          Right x -> let x' = fromString x in (Succeeded x', pure x')
+                                                          Left e  -> (Failed . fromString $ show e, throwM e)
+
+                                                    liftIO $ DB.saveAttempt conn (Attempt uid submitDate now (Code pId code) attemptState)
+                                                    returnValue
 submitAttempt _ _ _ _                             = throwM err401
