@@ -10,6 +10,7 @@ import Data.UUID                    (UUID)
 import Servant              
 -- | Project imports
 import Types.CodingProblem
+import Types.Attempt
 import qualified Types.User as S    (User(..), UserId)
 
 -- 
@@ -44,6 +45,14 @@ getCodingProblemCasesById :: Connection -> UUID -> IO CodingProblemCases
 getCodingProblemCasesById conn cpId = do
   res <- query conn "SELECT description, input, output, visibility from CodingProblemCases as cp where cp.casescodingproblemid = ?;" (Only cpId)   
   return $ CodingProblemCases cpId res
+
+-- | Saves a 'CodeProblem' 'Attempt' in the Database
+saveAttempt :: Connection -> NormalAttempt -> IO ()
+saveAttempt conn a@(Attempt d1 d2 (Code pId c) s) = do 
+  execute conn 
+    "insert into attempts (codingProblemId, submitted_on, completed_on, code, state) values (?, ?, ?, ?, ?);" 
+    (pId, d1, d2, c, s) 
+  return ()
 
 -- 
 -- Datasensitive Functions

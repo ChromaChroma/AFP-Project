@@ -10,6 +10,7 @@ import Crypto.JWT
 import Data.String                (IsString(..))
 import Data.Aeson                 (ToJSON, FromJSON)
 import Data.Text                  (Text)
+import Data.Time                  (getCurrentTime)
 import Data.Typeable              (Typeable)
 import Data.UUID                  (UUID)
 import qualified Data.UUID as UUID (fromText)
@@ -23,11 +24,10 @@ import Security.Auth              (AuthJwtAccess)
 import Servant.Server.Generic     (AsServerT)
 -- | Project imports
 import Types.CodingProblem
+import Types.Attempt
 import Security.Claims            (AccessClaims, extractSub)
 import System.Processing          (processAttempt)
-import qualified Database.Repository as DB (getCodingProblems, getCodingProblemById, getCodingProblemCasesById)
-
-import Debug.Trace (trace)
+import qualified Database.Repository as DB (getCodingProblems, getCodingProblemById, getCodingProblemCasesById, saveAttempt)
 
 {- Data Transfer Objects -}
 
@@ -78,9 +78,12 @@ getCodingProblem conn = liftIO . DB.getCodingProblemById conn
 -- | Handlers for 'SubmitCodingAttempt'
 submitAttempt :: (MonadThrow m, MonadIO m) => Connection ->  Maybe AccessClaims -> UUID -> AttemptDTO -> m Text
 submitAttempt conn (Just c) pId (AttemptDTO code) = do 
-                                                    uid   <- extractSub c
-                                                    cp    <- liftIO $ DB.getCodingProblemById conn pId
-                                                    cases <- liftIO $ DB.getCodingProblemCasesById conn pId
-                                                    res   <- liftIO $ processAttempt uid cp cases code 
-                                                    return $ fromString res
+                                                    submitDate <- liftIO getCurrentTime
+                                                    uid        <- extractSub c
+                                                    cp         <- liftIO $ DB.getCodingProblemById conn pId
+                                                    cases      <- liftIO $ DB.getCodingProblemCasesById conn pId
+                                                    res        <- fromString <$> liftIO (processAttempt uid cp cases code)
+                                                    now        <- liftIO getCurrentTime
+                                                    liftIO $ DB.saveAttempt conn (Attempt submitDate now (Code pId code) (Succeeded res))
+                                                    return res
 submitAttempt _ _ _ _                             = throwM err401

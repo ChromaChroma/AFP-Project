@@ -37,9 +37,9 @@ instance ToField Visibility where
   toField Hidden  = Plain "Hidden"
 instance FromField Visibility where 
   fromField  _ (Just "Visible") = return Visible
-  fromField  _ (Just "Hidden") = return Hidden
-  fromField  f (Just dat)      = returnError ConversionFailed f (B.unpack dat)
-  fromField  f _               = returnError UnexpectedNull f ""
+  fromField  _ (Just "Hidden")  = return Hidden
+  fromField  f (Just dat)       = returnError ConversionFailed f (B.unpack dat)
+  fromField  f _                = returnError UnexpectedNull f ""
 
 -- | A test case for a coding assignment with a description, input values and expected output values
 type TestCase = (TestCaseDescription, Input, Output, Visibility) 

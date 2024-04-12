@@ -8,24 +8,38 @@ CREATE TABLE users (
 CREATE TABLE codingproblems ( 
     id UUID PRIMARY KEY, 
     deadline timestamptz default (now() at time zone 'utc'), 
-    problemTags varchar(255), 
+    problemTags text, 
     difficulty varchar(255), 
-    title varchar(255), 
-    description varchar(255), 
-    testCases varchar(255), 
-    templateCode varchar(255)
+    title text, 
+    description text, 
+    templateCode text
 ); 
 
-CREATE TABLE codingproblemcases ( 
-    codingproblem_id UUID PRIMARY KEY, 
-    description varchar(255),
-    input varchar(255),
-    output varchar(255),
+CREATE TABLE codingproblemcases (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    casesCodingProblemId UUID,
+    description text,
+    input text,
+    output text,
     visibility varchar(255),
-    CONSTRAINT fk_codingproblem 
-        FOREIGN KEY(codingproblem_id)
+    CONSTRAINT fk_codingproblem
+        FOREIGN KEY(casesCodingProblemId)
             REFERENCES codingproblems(id)
-); 
+);
+
+CREATE TABLE attempts (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    codingProblemId UUID,
+    submitted_on timestamptz default (now() at time zone 'utc'), 
+    completed_on timestamptz default (now() at time zone 'utc'), 
+    code text, 
+    state text,
+    CONSTRAINT fk_codingproblem
+        FOREIGN KEY(codingProblemId)
+            REFERENCES codingproblems(id)
+);
+
+
 
 -- Dummy Data
 
