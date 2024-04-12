@@ -56,7 +56,6 @@ library
       , lens
       , time
       , mtl
-      , deepseq
       , uuid
 
       -- | Text dependencies

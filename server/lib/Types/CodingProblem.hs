@@ -9,7 +9,9 @@ import Data.Aeson                           (FromJSON, ToJSON)
 import Data.UUID                            (UUID)
 import GHC.Generics                         (Generic)
 import qualified Data.ByteString.Char8 as B (unpack)
-import Data.Text                            (Text)
+import Data.Text                            (Text, splitOn, intercalate)
+import Data.String                          (fromString)
+import Data.Text.Encoding                   (decodeUtf8)
 import Data.Time                            (UTCTime)
 import Data.Typeable                        (Typeable)
 import Database.PostgreSQL.Simple           (FromRow, ToRow)
@@ -17,9 +19,15 @@ import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField   
 
 
+type CodingProblemId     = UUID
+type Tag                 = Text
 type TestCaseDescription = Text
-type Input = Text
-type Output = Text
+type Input               = Text
+type Output              = Text
+
+-- 
+-- Visibility
+-- 
 
 data Visibility = Visible | Hidden 
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
@@ -36,8 +44,9 @@ instance FromField Visibility where
 -- | A test case for a coding assignment with a description, input values and expected output values
 type TestCase = (TestCaseDescription, Input, Output, Visibility) 
 
-
-type CodingProblemId = UUID
+-- 
+-- ProblemDifficulty
+-- 
 
 data ProblemDifficulty = Easy | Intermediate | Difficult | Extreme
  deriving (Generic, Show, Typeable, FromJSON, ToJSON)
@@ -56,34 +65,30 @@ instance ToField ProblemDifficulty where
   toField Difficult    = toField ("Difficult" :: String)
   toField Extreme      = toField ("Extreme" :: String)
 
-type Tag = Text
 
 data CodingProblemCases = CodingProblemCases 
   { casesCodingProblemId :: CodingProblemId
   , testCases            :: [TestCase]
-  } deriving (Generic, Show, Typeable, FromJSON, ToJSON, FromRow, ToRow)
+  } deriving (Generic, Show, Typeable, FromJSON, ToJSON)
+
+-- 
+-- CodingProblem
+-- 
 
 data CodingProblem = CodingProblem
-  { _id          :: CodingProblemId,
-    deadline     :: UTCTime,
-    problemTags  :: [Tag],
-    difficulty   :: ProblemDifficulty,
-    title        :: Text,
-    description  :: Text,
-    -- testCases    :: [TestCase],
-    templateCode :: Text
-    -- leaderboard  :: Leaderboard
+  { _id          :: CodingProblemId
+  , deadline     :: UTCTime
+  , problemTags  :: [Tag]
+  , difficulty   :: ProblemDifficulty
+  , title        :: Text
+  , description  :: Text
+  , templateCode :: Text
+  -- , leaderboard  :: Leaderboard
   } deriving (Generic, Show, Typeable, FromJSON, ToJSON, FromRow, ToRow)
 
--- TODO, implement actual version
-instance ToField [TestCase] where 
-  toField  _ = Plain ""
-instance FromField [TestCase] where 
-  fromField  _ _ = return []
-
-  
--- TODO, implement actual version
 instance ToField [Tag] where 
-  toField  _ = Plain ""
+  toField = toField . intercalate ","
 instance FromField [Tag] where 
-  fromField  _ _ = return []
+  fromField  _ (Just dat) = return . splitOn "," $ decodeUtf8 dat
+  fromField  _ _          = return []
+  
