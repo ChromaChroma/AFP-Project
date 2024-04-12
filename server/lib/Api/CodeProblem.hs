@@ -28,7 +28,7 @@ import Types.CodingProblem
 import Types.Attempt
 import Security.Claims            (AccessClaims, extractSub)
 import System.Processing          (processAttempt)
-import qualified Database.Repository as DB (getCodingProblems, getCodingProblemById, getCodingProblemCasesById, saveAttempt)
+import qualified Database.Repository as DB (getCodingProblems, getCodingProblemById, getCodingProblemCasesById, saveAttempt, getCodingProblemAttempts)
 
 {- Data Transfer Objects -}
 
@@ -39,9 +39,10 @@ newtype AttemptDTO = AttemptDTO { code :: Text }
 
 -- | Coding problem API 
 type CodingProblemAPI mode = 
-       GetCodingProblems mode
-  :<|> GetCodingProblem mode
+       GetCodingProblems   mode
+  :<|> GetCodingProblem    mode
   :<|> SubmitCodingAttempt mode
+  :<|> GetAttempts         mode
 
 
 -- | GET /coding-problems
@@ -54,19 +55,28 @@ type GetCodingProblems mode = mode :- "coding-problems"
 type GetCodingProblem  mode = mode :- "coding-problems" :> Capture "id" UUID 
   :> Get '[JSON] CodingProblem
 
-  -- | POST /coding-problems/:id/attemps (Protected)
-  -- Target for user to submit attempts
+-- | POST /coding-problems/:id/attemps (Protected)
+-- Target for user to submit attempts
 type SubmitCodingAttempt mode = mode :- AuthJwtAccess 
   :> "coding-problems" :> Capture "id" UUID  :> "attempts"
   :> ReqBody '[JSON] AttemptDTO
   :> Post '[JSON] Text
+
+-- | GET /coding-problems/:id/attemps (Protected)
+-- Get all attempts of user for a problem
+type GetAttempts mode = mode :- AuthJwtAccess 
+  :> "coding-problems" :> Capture "id" UUID  :> "attempts"
+  :> Get '[JSON] [Attempt]
 
 
 {- Handlers -}
 
 -- | Handlers for 'CodingProblemAPI'
 handlers :: Connection -> CodingProblemAPI (AsServerT App)
-handlers conn = getCodingProblems conn :<|> getCodingProblem conn :<|> submitAttempt conn 
+handlers conn = getCodingProblems conn 
+  :<|> getCodingProblem conn 
+  :<|> submitAttempt conn 
+  :<|> getAttempts conn 
 
 -- | Handlers for 'GetCodingProblems'
 getCodingProblems :: (MonadThrow m, MonadIO m) => Connection -> m [CodingProblem]
@@ -79,8 +89,8 @@ getCodingProblem conn = liftIO . DB.getCodingProblemById conn
 -- | Handlers for 'SubmitCodingAttempt'
 submitAttempt :: (MonadThrow m, MonadIO m) => Connection ->  Maybe AccessClaims -> UUID -> AttemptDTO -> m Text
 submitAttempt conn (Just c) pId (AttemptDTO code) = do 
-                                                    submitDate <- liftIO getCurrentTime
                                                     uid        <- extractSub c
+                                                    submitDate <- liftIO getCurrentTime
                                                     cp         <- liftIO $ DB.getCodingProblemById conn pId
                                                     cases      <- liftIO $ DB.getCodingProblemCasesById conn pId
                                                     rr <- liftIO (try (processAttempt uid cp cases code)  :: IO (Either ServerError String))
@@ -93,3 +103,10 @@ submitAttempt conn (Just c) pId (AttemptDTO code) = do
                                                     liftIO $ DB.saveAttempt conn (Attempt uid submitDate now (Code pId code) attemptState)
                                                     returnValue
 submitAttempt _ _ _ _                             = throwM err401
+
+-- | Handler for 'GetAttempts'
+getAttempts :: (MonadThrow m, MonadIO m) => Connection ->  Maybe AccessClaims -> UUID -> m [Attempt]
+getAttempts conn (Just c) pId = do 
+                                uid <- extractSub c
+                                liftIO $ DB.getCodingProblemAttempts conn pId uid
+getAttempts _ _ _             = throwM err401

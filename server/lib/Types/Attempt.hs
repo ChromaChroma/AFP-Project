@@ -7,9 +7,11 @@ module Types.Attempt where
 import Data.Aeson                       (FromJSON, ToJSON)
 import qualified Data.ByteString as BS  (splitAt)
 import Data.Text                        (Text, unpack)
-import Data.Text.Encoding                   (decodeUtf8)
+import Data.Text.Encoding               (decodeUtf8)
 import Data.Time                        (UTCTime)
 import Data.UUID                        (UUID)
+import Database.PostgreSQL.Simple.FromRow (FromRow(..), field)
+import Database.PostgreSQL.Simple.ToRow   (ToRow(..))
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
 import GHC.Generics                     (Generic)
@@ -57,16 +59,34 @@ data AttemptState r e
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
 -}
 
-data Attempt r e = Attempt
+data Attempt = Attempt
   { userId          :: UUID
   , submittedOn     :: UTCTime
   , runCompletedOn  :: UTCTime
   , code            :: Code
-  , state           :: AttemptState r e
+  , state           :: AttemptState Text Text
   }
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
+
+instance FromRow Attempt where
+  fromRow = Attempt 
+    <$> field 
+    <*> field 
+    <*> field 
+    <*> (Code <$> field <*> field) 
+    <*> field
+
+instance ToRow Attempt where
+  toRow (Attempt uid sOn rcOn (Code pId code) s) = 
+    [toField uid
+    , toField sOn
+    , toField rcOn
+    , toField pId
+    , toField code
+    , toField s
+    ]
 
 -- | Type synonym for a normal, simple attempt.
 --
 -- Gives Text message if failed.
-type NormalAttempt = Attempt Text Text
+type NormalAttempt = Attempt
