@@ -65,6 +65,7 @@ type alias CodeProblemModel =
     { session            : Session
     , state              : Status
     , uploadedSubmission : Maybe String
+    , submissionState    : String
     }
 
 

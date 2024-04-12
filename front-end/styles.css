@@ -168,3 +168,9 @@ body {
 .problem-container div.button-group button:hover {
     background-color: #FFCD00;
 }
+
+.output-container {
+    padding: 10px 20px;
+    margin-top: 25px;
+    border:1px solid #C00A35;
+}

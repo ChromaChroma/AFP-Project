@@ -23,6 +23,7 @@ init : Session -> (Model, Cmd Msg)
 init session = ( { session            = session
                  , state              = Loading
                  , uploadedSubmission = Nothing
+                 , submissionState    = "No submission uploaded..."
                  }
                , getCodeProblem
                )
@@ -66,21 +67,29 @@ update msg model =
             Just file ->
                 case getCred model.session of
                     Just cred ->
-                        ( model, submitFile cred.access file )   -- TODO:handle this case
+                        ( { model | submissionState = "Verifying implementation..." }
+                        , submitFile cred.access file 
+                        )   -- TODO:handle this case
 
                     Nothing ->
-                        ( model, Cmd.none ) -- TODO should give use some feedback about not logged in
+                        ( { model | submissionState = "Not logged in: Cannot upload submission!" }
+                        , Cmd.none 
+                        )
             
             Nothing   ->
-                ( model, Cmd.none )
+                ( { model | submissionState = "No file to submit selected!" }
+                , Cmd.none 
+                )
 
     CompletedSubmission (Ok response) ->
-        ( model, Cmd.none ) 
-            |> Debug.log "Submission succesfullly received" -- TODO:handle this case
+        ( { model | submissionState = response }
+        , Cmd.none 
+        ) 
 
     CompletedSubmission (Err message)  ->
-        ( model, Cmd.none ) 
-            |> Debug.log (Error.errorToStr message)
+        ( { model | submissionState = Error.errorToStr message }
+        , Cmd.none 
+        ) 
 
     GotFile file                      -> 
         ( { model | uploadedSubmission = Just file }
@@ -130,7 +139,7 @@ viewHandler model =
             viewLoadingCodingProblem
 
         Success problem ->
-            viewLoadedCodeProblem problem
+            viewLoadedCodeProblem model problem
 
 
 viewFailedToLoad : Html Msg
@@ -150,8 +159,8 @@ viewLoadingCodingProblem =
                 [ p [ class "loading-message" ] [ text "Loading..." ] ]
 
 
-viewLoadedCodeProblem : CodingProblem -> Html Msg
-viewLoadedCodeProblem problem = 
+viewLoadedCodeProblem : Model -> CodingProblem -> Html Msg
+viewLoadedCodeProblem model problem = 
     div [ class "problem-container" ]
         [ h2 [ class "title" ] [ text problem.title ]
         , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
@@ -181,6 +190,7 @@ viewLoadedCodeProblem problem =
             , button [ class "upload-button", onClick UploadSubmission ]
                 [ text "Submit" ]
             ]
+        , div [ class "output-container"] [ text (model.submissionState) ]
         ]
 
 
