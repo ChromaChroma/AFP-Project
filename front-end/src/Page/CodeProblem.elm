@@ -241,7 +241,7 @@ submitFile access file =
         hs =
             [ Http.header "Access-Control-Allow-Origin" "*"
             , Http.header "Access-Control-Allow-Methods" "DELETE, POST, GET, OPTIONS"
-            , Http.header "Access-Control-Allow-Headers" "Content-Type, Authorization, X-Requested-With"
+            , Http.header "Access-Control-Allow-Headers" "Content-Type, Authorization"
             -- , Http.header "Accept" "*/*"
             , Http.header "Authorization" ("Bearer " ++ access)
             ]
