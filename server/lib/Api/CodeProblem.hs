@@ -7,6 +7,7 @@ module Api.CodeProblem where
 import Control.Monad.Catch        (MonadThrow(..))
 import Control.Monad.IO.Class     (liftIO, MonadIO)
 import Crypto.JWT                 
+import Data.String                (IsString(..))
 import Data.Aeson                 (ToJSON, FromJSON)
 import Data.Text                  (Text)
 import Data.Typeable              (Typeable)
@@ -77,6 +78,6 @@ submitAttempt conn (Just c) pId (AttemptDTO code) = do
                                                     uid   <- extractSub c
                                                     cp    <- liftIO $ DB.getCodingProblemById conn pId
                                                     cases <- liftIO $ DB.getCodingProblemCasesById conn pId
-                                                    liftIO $ processAttempt uid cp cases code 
-                                                    pure  "Done!" 
+                                                    res   <- liftIO $ processAttempt uid cp cases code 
+                                                    return $ fromString res
 submitAttempt _ _ _ _                             = throwM err401

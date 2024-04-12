@@ -13,7 +13,7 @@ import Data.UUID              (UUID)
 import Data.Text              (Text, unpack)
 import Servant
 import System.Exit            (ExitCode(..))
-import System.IO              (hPutStr, hGetContents)
+import System.IO              (hPutStr, hGetContents, hGetLine)
 import System.IO.Unsafe       (unsafePerformIO)
 import System.Process         (StdStream(..), CreateProcess(..), waitForProcess, proc, createProcess)
 import System.Directory       (createDirectoryIfMissing, removeDirectoryRecursive)
@@ -30,7 +30,7 @@ ignoreIOFail = handle handlerError . flip catchIOError handlIOError
   where
     -- | Handles IOExceptions thrown
     handlIOError :: IOError -> IO ()
-    handlIOError e =  void (print e)
+    handlIOError e = void (print e)
     -- | Handles 'error' calls thrown
     handlerError :: ErrorCall -> IO ()
     handlerError e = void (print e)
@@ -48,72 +48,79 @@ runProcess proccess = do
     ExitFailure _ -> Left <$> hGetContents errHandle
 
 -- | Takes the result of a process attempt and creates a 409 response with the error message contained in the 'Left' value
-throwIfError :: MonadThrow m => m (Either String a) -> m ()
+throwIfError :: MonadThrow m => m (Either String a) -> m a
 throwIfError io = io >>= \case
   Left err -> throwM err409 {errBody = UTF8.fromString err }
-  _        -> pure ()
+  Right x  -> return x
 
 -- | Processes the given code.
 --
 -- Creates a clean empty directory, attempts to compile, run and test the code, and returns its result.
 --
-processAttempt :: UUID -> CodingProblem -> CodingProblemCases -> Text -> IO () 
+processAttempt :: UUID -> CodingProblem -> CodingProblemCases -> Text -> IO String
 processAttempt uid cp (CodingProblemCases _ cases) code = do
   let tempDir     = "temp/" ++ show uid
       tempDirMain = tempDir ++ "/Main.hs" 
       tempExe     = tempDir ++ "/main"
 
-  -- | Clean removes temp dir
+  -- | Clean temp dir
   ignoreIOFail $ removeDirectoryRecursive tempDir
-
-  -- | Creates temp dir
+  -- | Creates new temp dir
   createDirectoryIfMissing True tempDir
-
-  -- | Create Main file for compilation
+  -- | Create Main file with code
   writeFile tempDirMain (unpack code)
-
-  -- | Compile file to same dir/dist (thus check validity of code)
-  -- r <-  runProcess (proc "ghc" [tempDirMain])
+  -- | Compile Main file (thus checks if it is valid code)
+  --   Returns errors in the code back to the user when wrong
   throwIfError $ runProcess (proc "ghc" [tempDirMain])
-  
-  -- | Confirm working executable
-  throwIfError $ runProcess (proc tempExe [])
+  -- | Run testcases against program and build the response
+  response <- throwIfError (testCasesResultMessage <$> runTestcases tempExe cases )
+  -- | Clean temp dir
+  ignoreIOFail $ removeDirectoryRecursive tempDir
+  return response
 
-  -- | run file as test/on test cases
-      -- Get testcases 
-      -- Run over all of them / input them as list of cases
-  let testCase  = head cases
-  --TODO get either out here and return success or fail to usr
-  ignoreIOFail (runTest tempExe testCase >>= print) 
-  -- let tests = buildTestcases tempDirMain cases
-      
-  -- | Build up result of code run
-
-  -- | Remove temp dir
-  -- runWait ("rm -r " ++ tempDir)
-
-  -- | Return result of run
-  putStrLn "Done"
-
-
+-- | Runs all provided testcases against the program
+--
+-- Folds over the test cases and runs them using @runTest@.
+-- Returns an 'Either' in an 'IO', containing either a 'Left' with the error message, or a 'Right' with the amount of succeeded tests (all).
+-- Returns 'Left' at first failed testcase
+runTestcases :: String -> [TestCase] -> IO (Either String Int)
+runTestcases exePath = foldr f (pure $ Right 0)
+  where 
+    f :: TestCase -> IO (Either String Int) -> IO (Either String Int)
+    f testcase acc = do 
+      either <- runTest exePath testcase 
+      case either of 
+        Right x -> ((1 +) <$>) <$> acc
+        Left  x -> pure $ Left x
+         
+-- | Creates a process that runs a testcase against the program
+--
+-- Returns an 'Either' in an 'IO', containing either a 'Left' with the error message, or a 'Right' with the output
 runTest :: String -> TestCase -> IO (Either String String)
-runTest exePath (desc, inp, unpack -> out, _) = do 
-  (_, Just oH, _, eH) <- createProcess (proc exePath [unpack inp]) 
+runTest exePath (unpack -> desc, inp, unpack -> expOut, _) = do 
+  (_, Just oH, Just errH, eH) <- createProcess (proc exePath [unpack inp]) 
                                                       { std_out = CreatePipe 
                                                       , std_err = CreatePipe }
   exitCode <- waitForProcess eH
-  o <- safeHead . lines <$> hGetContents oH
-  case exitCode of 
-    ExitSuccess | o == out -> return $ Right o 
-    ExitSuccess            -> return $ Left ("Testcase (\""++ unpack desc ++"\"): Expected " ++ out ++ ", but got: " ++ o)
-    ExitFailure _          -> return $ Left "Failed Test run"
+  o        <- hGetLine oH
+  err      <- hGetContents errH
+  return $ case exitCode of 
+    ExitSuccess | o == expOut -> Right o 
+    ExitSuccess               -> Left (testCaseFailedMessage desc expOut o)
+    ExitFailure _             -> Left (testCaseErrorMessage desc expOut err)
 
+-- 
+-- Response messages
+-- 
 
-safeHead ::[String] -> String
-safeHead []     = ""
-safeHead (x:xs) = x
+-- | Creates a message for a failed test
+testCaseFailedMessage :: String -> String -> String -> String
+testCaseFailedMessage desc exp expOut = "Testcase (\""++ desc ++"\"): Expected " ++ exp ++ ", but got: " ++ expOut
 
--- TODO
--- buildTestcases :: Text -> [TestCase] -> Text
--- buildTestcases _        []                         = ""
--- buildTestcases mainPath ((desc, inp, out, _) : xs) = runTest out (proc mainPath [inp]) : buildTestcases xs
+-- | Creates a message for a crashed test 
+testCaseErrorMessage :: String -> String -> String -> String
+testCaseErrorMessage desc exp err = "Testcase (\""++ desc ++"\"): Expected " ++ exp ++ ", but got an error: " ++ err
+
+-- | Creates a message for completed test run results
+testCasesResultMessage :: Either String Int -> Either String String
+testCasesResultMessage testResults = (\x -> "All " ++ show x ++ " tests have been run successfully.") <$> testResults
