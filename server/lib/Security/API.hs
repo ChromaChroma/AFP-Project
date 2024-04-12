@@ -4,6 +4,7 @@ module Security.API (api, Api, AuthJwtAccess, AuthJwtRefresh) where
 import Control.Exception      (throw)
 import Control.Monad.Catch    (MonadThrow(..))
 import Crypto.JWT             (JWK)
+import Database.PostgreSQL.Simple (Connection)
 import Data.Text              (Text)
 import Data.UUID              (UUID)
 import GHC.Generics           (Generic)
@@ -14,10 +15,11 @@ import Servant.Server.Generic (AsServerT)
 import Api.CodeProblem
 import Security.App           (App)
 import Security.Handlers      (LoginRequest , LoginResponse , getUserHandler , loginHandler , refreshTokenHandler)
-import Security.User          (User(..))
+import Types.User             (User(..), UserId)
 import Security.Auth          (AuthJwtAccess, AuthJwtRefresh)
 import Security.Claims        (AccessClaims)
 
+-- | API datatype for whole application
 data Api mode = Api  
   { -- | POST /login
     login  :: mode :- "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
@@ -28,26 +30,27 @@ data Api mode = Api
   }
   deriving Generic
 
-api :: JWK -> Api (AsServerT App)
-api jwk = Api
-  { login   = loginHandler jwk
+-- | API implementatio for whole application
+api :: Connection -> JWK -> Api (AsServerT App)
+api conn jwk = Api
+  { login   = loginHandler conn jwk 
   , refresh = refreshTokenHandler jwk
-  , secured = securedHandlers
-  , codingProblems = handlers
+  , secured = securedHandlers conn
+  , codingProblems = handlers conn
   }
 
 ----------------------------------------------------
 
+-- | Api datatype for secured endpoints
 newtype SecuredRoutes mode = SecuredRoutes
   { -- GET /users/:userId
-    getUser :: mode :- "users" :> Capture "userId" UUID :> Get '[JSON] User
-  -- , codingProblem :: mode :- SubmitCodingAttempt
+    getUser :: mode :- "users" :> Capture "userId" UserId :> Get '[JSON] User
   }
   deriving Generic
 
-securedHandlers :: Maybe AccessClaims -> SecuredRoutes (AsServerT App)
-securedHandlers (Just _) = SecuredRoutes { 
-  getUser = getUserHandler
-  -- , codingProblem = submit 
+-- | Api implementation for secured endpoints
+securedHandlers :: Connection -> Maybe AccessClaims -> SecuredRoutes (AsServerT App)
+securedHandlers conn (Just c) = SecuredRoutes { 
+  getUser = getUserHandler conn
   }
-securedHandlers _        =  throw err401
+securedHandlers _ _        =  throw err401
