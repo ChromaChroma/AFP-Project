@@ -6,7 +6,7 @@ volumes:
 
 services:
   database:
-    image: postgres:latest
+    build: .development/db
     ports:
       - "15432:5432"
     environment:
@@ -16,7 +16,7 @@ services:
       DB_APP_USER:        code-commit-user
       DB_APP_PASS:        code-commit-user-password
     volumes:
-      - database:/var/lib/postgresql/data
+      - .development/data:/var/lib/postgresql/data
 
   back-end: 
     build: 

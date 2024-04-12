@@ -1,35 +1,32 @@
-{-# LANGUAGE PolyKinds         #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE TypeApplications  #-}
-
+{-# LANGUAGE OverloadedStrings  #-}
 module Main where
 
 -- | Dependency imports
 import Control.Concurrent       (forkIO)
-import Control.Monad            (forever, guard)
-import Control.Monad.Catch      (MonadThrow, try, SomeException(..))
-import Control.Monad.Except     (ExceptT(..))
-import Control.Monad.Identity   (IdentityT (..))
-import Control.Monad.IO.Class   (MonadIO)
-import Data.Either              (Either(..))
-import Data.Text                (Text)
 import Network.Wai.Handler.Warp (run)
-import Network.Wai.Middleware.Cors (simpleCors, cors, CorsResourcePolicy(..))
-import Servant                  (Raw, Context(..), Handler(..))
-import Servant.Server           (Application)
-import Servant.Server.Generic   ( genericServeTWithContext)
-import System.Process
-import System.Exit
+import Servant.Server.Generic   (genericServeTWithContext)
+
 -- | Project imports
-import Security.API             (Api, api)
-import Security.App             (App, appToHandler)
-import Security.Auth            (authHandler, generateKey)
-import Security.Claims          (AccessClaims, RefreshClaims, accessSettings, refreshSettings)
-import Dummy                    (dummyUUID)
-import System.Checks            (ghcCheck)
+import Security.API             (api)
+import Security.App             (appToHandler, jwtDefaultContext)
+import Security.Auth            (generateKey)
+import System.Checks            (ghcCheckIO, awaitShutdown)
+import Database.Config          (getConnection)
 
 port :: Int
 port = 8080
+
+main :: IO ()
+main = do
+  ghcCheckIO "9.4.8"
+
+  dbConn <- getConnection
+  jwk <- generateKey
+  let app = genericServeTWithContext appToHandler (api dbConn jwk) (jwtDefaultContext jwk)
+
+  -- Fork the program to allow the program to take other inputs
+  _ <- forkIO $ putStrLn banner >> run port app
+  awaitShutdown
 
 -- | Banner that is printed at startup
 --

@@ -1,0 +1,311 @@
+{
+	"info": {
+		"_postman_id": "ec7d9ed2-7450-4f0f-9fb2-b4f896e3cba6",
+		"name": "AFP Project",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11370931"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {\r",
+							"    const token = pm.response.json()[\"access\"]\r",
+							"    pm.collectionVariables.set(\"authToken\", token);\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"user\",\r\n    \"password\": \"password\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Refresh",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"user\",\r\n    \"password\": \"password\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/refresh",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"refresh"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetUser",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJhdWQiOiJhY2Nlc3MiLCJleHAiOjEuNzExNDUzODkzNjc3NTIxMjM4ZTksImlhdCI6MS43MTE0NTI5OTM2Nzc1MjEyMzhlOSwic3ViIjoiMDhhMmMzZDktYjdlYy00OGU1LThmNDAtM2E5NDJhZDAxMTMwIn0.3vU9JD7Y-OGa48S1zp63C34L6QdLi3lYMfjLBRiVuY6foEwDME8JtAed5qVOcd6ydG2-nO8t1oPfMhi9mEwAaw",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/users/f6736119-0993-4a2b-beb0-7a2fccef99a4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						"f6736119-0993-4a2b-beb0-7a2fccef99a4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Coding Problems",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/coding-problems",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"coding-problems"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Coding Problem",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/coding-problems/f6736119-0993-4a2b-beb0-7a2fccef99a2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"coding-problems",
+						"f6736119-0993-4a2b-beb0-7a2fccef99a2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Submit Coding Problem",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"module Main where \\n\\nimport System.Environment\\n\\nmain :: IO ()\\nmain = do \\n  xs <- getArgs \\n  print (func $ (read :: String -> Int) (concat xs))\\n\\nfunc :: Int -> Int\\nfunc i = i*2\"\r\n}\r\n\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/coding-problems/f6736119-0993-4a2b-beb0-7a2fccef99a2/attempts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"coding-problems",
+						"f6736119-0993-4a2b-beb0-7a2fccef99a2",
+						"attempts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Submit Incorrect Coding Problem",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"module Main where \\n\\nimport System.Environment\\n\\nmain :: IO ()\\nmain = do \\n  xs <- getArgs \\n  print (func $ (read :: String -> Int) (concat xs))\\n\\nfunc :: Int -> Int\\nfunc i = i\"\r\n}\r\n\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/coding-problems/f6736119-0993-4a2b-beb0-7a2fccef99a2/attempts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"coding-problems",
+						"f6736119-0993-4a2b-beb0-7a2fccef99a2",
+						"attempts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Attempts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/coding-problems/f6736119-0993-4a2b-beb0-7a2fccef99a2/attempts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"coding-problems",
+						"f6736119-0993-4a2b-beb0-7a2fccef99a2",
+						"attempts"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -30,3 +30,6 @@ elm.js
 
 # Server stuff
 server/temp/**
+
+# Development env files
+.development/data/**
