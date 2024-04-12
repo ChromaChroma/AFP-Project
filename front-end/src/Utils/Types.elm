@@ -1,15 +1,18 @@
 module Utils.Types exposing (..)
 
--- import Utils.Types exposing (..)
 import Browser.Navigation as Nav
+import Http
 
--- Code Problem 
+
+-- CODING PROBLEM TYPES
+
 
 type ProblemDifficulty 
   = Easy 
   | Intermediate 
   | Difficult 
   | Extreme
+
 
 type alias CodingProblem =
   { id           : String
@@ -23,23 +26,27 @@ type alias CodingProblem =
   }
 
 
--- User 
+-- USER TYPES
+
 
 type alias User =
   { username : String
   , password : String
   }
 
+
 type Field
   = Username
   | Password
 
--- Pages / Models
+
+-- PAGES / MODEL TYPES
+
 
 type Page 
     = NotFoundPage
-    | LoginPage         LoginModel --Login.Model
-    | CodingProblemPage CodeProblemModel --CodeProblem.Model
+    | LoginPage         LoginModel
+    | CodingProblemPage CodeProblemModel 
 
 
 type alias LoginModel =
@@ -47,15 +54,17 @@ type alias LoginModel =
   , user    : User
   }
 
+
 type Status 
   = Failure
   | Loading
   | Success CodingProblem
 
+
 type alias CodeProblemModel =
     { session            : Session
     , state              : Status
-    , uploadedSubmission : Maybe String -- File
+    , uploadedSubmission : Maybe String
     }
 
 
@@ -66,21 +75,43 @@ type alias MainModel =
     }
 
 
--- Route
+-- ROUTING TYPES
+
 
 type Route 
     = PageNotFoundRoute
     | LoginRoute
     | CodingProblemRoute
 
--- Session 
+
+-- SESSION TYPES 
+
 
 type alias Cred =
     { access  : String
     , refresh : String   
     }
 
+
 type Session
     = Authenticated   Nav.Key Cred
     | Unauthenticated Nav.Key
 
+
+-- AUXILIARY FUNCTIONS
+
+
+problemDifficultyToStr : ProblemDifficulty -> String
+problemDifficultyToStr difficulty =
+    case difficulty of
+        Easy         ->
+            "Easy"
+
+        Intermediate ->
+            "Intermediate"
+
+        Difficult    ->
+            "Difficult"
+
+        Extreme      ->
+            "Extreme"

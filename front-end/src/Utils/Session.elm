@@ -1,11 +1,13 @@
 port module Utils.Session exposing (getNavKey,getCred,isLoggedIn,store,logout,storeV,changes,onStoreChange,decodeCred)
 
 import Browser.Navigation as Nav
-import Json.Decode        as Decode      exposing (Decoder, Value, decodeString, field, string)
-import Utils.Types exposing (..)
-import Utils.Transcoder exposing (..)
+import Json.Decode        as Decode exposing (Decoder, Value, decodeString, field, string)
+import Utils.Types                  exposing (..)
+import Utils.Transcoder             exposing (..)
+
 
 -- INFO
+
 
 getNavKey : Session -> Nav.Key
 getNavKey session =
@@ -16,6 +18,7 @@ getNavKey session =
         Unauthenticated key ->
             key
 
+
 getCred : Session -> Maybe Cred
 getCred session =
     case session of
@@ -25,6 +28,7 @@ getCred session =
         Unauthenticated _ ->
             Nothing
 
+
 isLoggedIn : Session -> Bool
 isLoggedIn session =
     case session of
@@ -32,11 +36,12 @@ isLoggedIn session =
 
         Unauthenticated _ -> False
 
--- Viewer
+
+-- STORE DATA
+
+
 store : Cred -> Cmd msg
 store cred = storeCredWith cred -- TODO: this process with clean up this will be more separated into different files
-
-
 
 
 storeCredWith : Cred -> Cmd msg
@@ -61,6 +66,7 @@ logout =
 
 
 port storeV : Maybe Value -> Cmd msg
+
 
 port onStoreChange : (String -> msg) -> Sub msg
 

@@ -9,16 +9,18 @@ import Task                              exposing (Task)
 import Http
 import Browser.Navigation as Nav
 import Page.CodeProblem   as CodeProblem
-import Utils.Route     as Route                       exposing (pushUrl)
-import Utils.Error     as Error                      exposing (errorToStr)
-import Utils.Session   as Session                        exposing ( getNavKey)
-import Utils.Types exposing (..)
-import Utils.Transcoder exposing (..)
--- TODO: fix routing, handled access correctly (Using session) & refreshing of token, show output of code, abstract Http with endpoints, update css styling, register page, choce codeproblem page
+import Utils.Route        as Route       exposing (pushUrl)
+import Utils.Error        as Error       exposing (errorToStr)
+import Utils.Session      as Session     exposing (getNavKey)
+import Utils.Types                       exposing (..)
+import Utils.Transcoder                  exposing (..)
+
 
 -- MODEL
 
+
 type alias Model = LoginModel
+
 
 init : Session -> (Model, Cmd msg)
 init session = 
@@ -31,28 +33,27 @@ init session =
     , Cmd.none
     )
 
+
 -- UPDATE
+
 
 type Msg
   = UpdateInput    Field String
   | SubmitLogin
   | CompletedLogin (Result Http.Error Cred)
-  | GotSession Session
-
+  | GotSession     Session
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SubmitLogin -> --(model, Cmd.msg GotCodeProblemMsg CodeProblem.Loading)
+        SubmitLogin                   ->
             let 
                 request = submitRequest model.user
-                -- request =  Route.pushUrl Route.CodeProblem (getNavKey model.session) -- tmp just to test routing
             in 
             ( model
             , request
             )
-
 
         UpdateInput Username username ->
             updateCred (\user -> { user | username = username }) model
@@ -60,20 +61,22 @@ update msg model =
         UpdateInput Password password ->
             updateCred (\user -> { user | password = password }) model
 
-        CompletedLogin (Ok cred) ->
+        CompletedLogin (Ok cred)      ->
             let
                 updateModel = { model | session = Authenticated (getNavKey model.session) cred }
-                request =  Route.pushUrl CodingProblemRoute (getNavKey model.session)
+                request =  Route.pushUrl CodingProblemRoute (getNavKey updateModel.session)
             in
             ( updateModel
-            , Cmd.batch [request, Session.store cred] --request
-            ) |> Debug.log "nicee login"
+            , Cmd.batch [request, Session.store cred]
+            ) 
 
-        CompletedLogin (Err errorMsg) -> (model, Cmd.none) |> Debug.log ("login error: " ++ (errorToStr errorMsg))
+        CompletedLogin (Err errorMsg) ->
+            (model, Cmd.none) 
+                |> Debug.log (errorToStr errorMsg)
 
-        GotSession session ->
+        GotSession session            ->
             ( { model | session = session }
-            , Route.pushUrl CodingProblemRoute (getNavKey model.session) |> Debug.log "ppppppppppp"
+            , Route.pushUrl CodingProblemRoute (getNavKey model.session)
             )
 
 
@@ -86,8 +89,11 @@ updateCred transform model =
 
 -- SUBSCRIPTIONS
 
+
 subscriptions : Model -> Sub Msg
-subscriptions model = Session.changes GotSession (getNavKey model.session) |> Debug.log "ooooooooooooooooooo"
+subscriptions model = 
+    Session.changes GotSession (getNavKey model.session)
+
 
 -- VIEW
 
@@ -98,16 +104,28 @@ view model =
     , content =
         div [ class "login-container" ]
             [ h2 [] [ text "Login" ]
-            -- , viewForm model
             , Html.form [ class "login-form", onSubmit SubmitLogin ]
                 [ label [ for "username" ] [ text "Username" ]
-                , input [ type_ "text", id "username", name "username", placeholder "Enter your username", value model.user.username, onInput (UpdateInput Username) ] []
+                , input [ type_       "text"
+                                      , id "username"
+                        , name        "username"
+                        , placeholder "Enter your username"
+                        , value       model.user.username
+                        , onInput     (UpdateInput Username) 
+                        ] []
                 , label [ for "password" ] [ text "Password" ]
-                , input [ type_ "password", id "password", name "password", placeholder "Enter your password", value model.user.password, onInput (UpdateInput Password) ] []
+                , input [ type_       "password"
+                        , id          "password"
+                                      , name "password"
+                        , placeholder "Enter your password"
+                        , value       model.user.password
+                        , onInput     (UpdateInput Password) 
+                        ] []
                 , button [ type_ "submit" ] [ text "Login" ]
                 ]
             ]
         }
+
 
 -- HTTP
 
@@ -126,6 +144,10 @@ submitRequest user =
             }
     in
     Http.request request
+
+
+-- EXPORT
+
 
 toSession : Model -> Session
 toSession model =

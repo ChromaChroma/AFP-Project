@@ -6,10 +6,11 @@ import Html.Attributes exposing (alt, class, id, src, tabindex)
 
 -- VIEW
 
+
 view : { title : String, content : Html msg }
 view =
     { title = "Page Not Found"
     , content =
-        main_ [ id "content", class "container", tabindex -1 ]
+        main_ [ class "container" ]
               [ h1 [] [ text "Page Not Found" ] ]
     } 

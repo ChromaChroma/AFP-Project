@@ -66,7 +66,7 @@ body {
     max-width: 400px;
     margin: auto;
     margin-top: 5%;
-    padding: 20px 30px; /* Adjusted padding */
+    padding: 20px 30px;
     background-color: #FFFFFF;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -80,7 +80,7 @@ body {
 
 .login-form input[type="text"],
 .login-form input[type="password"] {
-    width: calc(100% - 20px); /* Adjusted width */
+    width: calc(100% - 20px);
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #C00A35;
@@ -115,7 +115,7 @@ body {
 }
 
 .problem-container h2.title {
-    color: #000000; /* Title color */
+    color: #000000; 
     margin-bottom: 10px;
 }
 
@@ -128,7 +128,7 @@ body {
 .problem-container ul.problem-tags li {
     display: inline;
     margin-right: 10px;
-    background-color: #FFCD00; /* Tag background color */
+    background-color: #FFCD00;
     padding: 5px 10px;
     border-radius: 5px;
 }
@@ -144,13 +144,13 @@ body {
 .problem-container hr {
     border: none;
     height: 1px;
-    background-color: #C00A35; /* Horizontal rule color */
-    margin: 20px 0; /* Margin top and bottom */
+    background-color: #C00A35; 
+    margin: 20px 0; 
 }
 
 .problem-container div.description {
     margin-top: 20px;
-    color: #000000; /* Description text color */
+    color: #000000; 
 }
 
 .problem-container div.button-group button {

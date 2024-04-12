@@ -1,6 +1,7 @@
 module Utils.Error exposing (errorToStr)
 
 import Http
+import String exposing(fromInt)
 
 
 errorToStr : Http.Error -> String
@@ -16,7 +17,7 @@ errorToStr error =
             "Network error, cannot reach server!"
 
         Http.BadStatus status ->
-            "BadStatus error, request failed with status: " ++ String.fromInt status
+            "BadStatus error, request failed with status: " ++ fromInt status
 
         Http.BadBody msg      ->
             "Bad body error, message: " ++ msg

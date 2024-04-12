@@ -1,31 +1,25 @@
 port module Page.CodeProblem exposing (Model, Msg, init, subscriptions, update, view, openPlainTextTabPort, toSession)
 
 import Browser
-import File                  exposing (File)
-import Html                  exposing (..)
-import Html.Attributes       exposing (attribute, class, disabled, href, id, placeholder, value, type_)
-import Html.Events           exposing (onClick, onInput, onSubmit, on)
+import File                         exposing (File)
+import Html                         exposing (..)
+import Html.Attributes              exposing (attribute, class, disabled, href, id, placeholder, value, type_)
+import Html.Events                  exposing (onClick, onInput, onSubmit, on)
 import Http
-import Utils.Session as Session             exposing (getCred, getNavKey)
-import Utils.Types exposing (..)
-import Utils.Transcoder exposing (..)
+import Utils.Session    as Session  exposing (getCred, getNavKey)
+import Utils.Types                  exposing (..)
+import Utils.Transcoder             exposing (..)
+import Utils.Error      as Error    exposing (..)
+-- import Api                          exposing (..)
+
 
 -- MODEL
 
-type alias Model = CodeProblemModel
--- type alias Model =
---     { session            : Session
---     , state              : Status
---     , uploadedSubmission : Maybe String -- File
---     }
 
--- type Status 
---   = Failure
---   | Loading
---   | Success CodingProblem
+type alias Model = CodeProblemModel
+
 
 init : Session -> (Model, Cmd Msg)
--- init = (Loading, getCodeProblem)
 init session = ( { session            = session
                  , state              = Loading
                  , uploadedSubmission = Nothing
@@ -36,14 +30,15 @@ init session = ( { session            = session
 
 -- UPDATE
 
+
 type Msg
   = GotCodeProblem      (Result Http.Error CodingProblem)
   | Reload
   | DownloadTemplate    String
   | UploadSubmission
   | CompletedSubmission (Result Http.Error String)
-  | GotFile             String -- File
-  | GotSession Session
+  | GotFile             String 
+  | GotSession          Session
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -54,19 +49,19 @@ update msg model =
         , getCodeProblem 
         )
 
-    GotCodeProblem (Ok codeProblem)  -> 
+    GotCodeProblem (Ok codeProblem)   -> 
         updateState (\_ -> Success codeProblem ) model 
-            |> Debug.log "coding problem received"
 
-    GotCodeProblem (Err tt)          -> 
+    GotCodeProblem (Err message)      -> 
         updateState (\_ -> Failure ) model 
-        |> Debug.log ("error: " ++ Debug.toString tt)
+        |> Debug.log (Error.errorToStr message)
 
-    DownloadTemplate content         -> 
+    DownloadTemplate content          -> 
         ( model
         , openPlainTextTabPort content
         )
-    UploadSubmission                 -> 
+
+    UploadSubmission                  -> 
         case model.uploadedSubmission of
             Just file ->
                 case getCred model.session of
@@ -81,23 +76,22 @@ update msg model =
 
     CompletedSubmission (Ok response) ->
         ( model, Cmd.none ) 
-            |> Debug.log "yes" -- TODO:handle this case
+            |> Debug.log "Submission succesfullly received" -- TODO:handle this case
 
-    CompletedSubmission (Err error)   ->
-        ( model, Cmd.none ) |> Debug.log "err"-- TODO:handle this case
+    CompletedSubmission (Err message)  ->
+        ( model, Cmd.none ) 
+            |> Debug.log (Error.errorToStr message)
 
     GotFile file                      -> 
         ( { model | uploadedSubmission = Just file }
         , Cmd.none
         )
 
-    GotSession session ->
+    GotSession session                ->
         ( { model | session = session }
-            , Cmd.none -- Route.replaceUrl (Session.navKey session) Route.Home
-            ) |> Debug.log "got session have key?"
+        , Cmd.none 
+        )
 
-    -- GotCodeProblem (Ok codeProblem) -> (Success codeProblem, Cmd.none)
-    -- GotCodeProblem (Err _) -> (Failure, Cmd.none)
 
 updateState : (Status -> Status) -> Model -> ( Model, Cmd Msg )
 updateState transform model =
@@ -105,98 +99,104 @@ updateState transform model =
     , Cmd.none 
     )
 
+
 -- SUBSCRIPTIONS
 
+
 subscriptions : Model -> Sub Msg
-subscriptions model = Session.changes GotSession (getNavKey model.session) |> Debug.log "codeeeeeeeeeeeeeeeeeeee"
+subscriptions model = 
+    Session.changes GotSession (getNavKey model.session)
+
 
 -- VIEW
+
 
 view : Model -> { title : String, content : Html Msg }
 view model =
     { title   = "CodeProblem"
     , content =
         div [ class "container.page"]
-            [ viewCodeProblem model ]
+            [ viewHandler model ]
     }
 
-viewCodeProblem : Model -> Html Msg
-viewCodeProblem model =
-    case model.state of
-        Failure ->
-            div [ class "problem-container" ]
-                [ p [ class "error-message" ]
-                    [ text "Failed to load problem case! "
-                    , button [ class "reload-button", onClick Reload ]
-                        [ text "Reload" ]
-                    ]
-                ]
 
-        Loading ->
-            div [ class "problem-container" ]
-                [ p [ class "loading-message" ] [ text "Loading..." ] ]
+viewHandler : Model -> Html Msg
+viewHandler model =
+    case model.state of
+        Failure         ->
+            viewFailedToLoad
+
+        Loading         ->
+            viewLoadingCodingProblem
 
         Success problem ->
-            div [ class "problem-container" ]
-                [ h2 [ class "title" ] [ text problem.title ]
-                , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
-                , p [ class "info-line" ]
-                    [ text "Deadline: "
-                    , span [ class "info-value" ] [ text problem.deadline ]
-                    ]
-                , p [ class "info-line" ]
-                    [ text "Difficulty: "
-                    , span [ class "info-value" ] [ text (diffToStr problem.difficulty) ]
-                    ]
-                , hr [] []
-                , div [ class "description" ] 
-                    [ text problem.description
-                    , div [ class "button-group" ]
-                        [ button [ class "button download-button", onClick (DownloadTemplate problem.templateCode) ]
-                            [ text "Template" ]
-                        ]
-                    ]
-                , hr [] []
-                , div [ class "button-group" ]
-                    [ input
-                        [ type_ "file"
-                        , onInput GotFile
-                        ]
-                        []
-                    , button [ class "upload-button", onClick UploadSubmission ]
-                        [ text "Submit" ]
-                    ]
-                ]
+            viewLoadedCodeProblem problem
 
--- Helper functions
+
+viewFailedToLoad : Html Msg
+viewFailedToLoad =
+    div [ class "problem-container" ]
+        [ p [ class "error-message" ]
+            [ text "Failed to load problem case! "
+            , button [ class "reload-button", onClick Reload ]
+                [ text "Reload" ]
+            ]
+        ]
+
+
+viewLoadingCodingProblem : Html Msg
+viewLoadingCodingProblem =
+    div [ class "problem-container" ]
+                [ p [ class "loading-message" ] [ text "Loading..." ] ]
+
+
+viewLoadedCodeProblem : CodingProblem -> Html Msg
+viewLoadedCodeProblem problem = 
+    div [ class "problem-container" ]
+        [ h2 [ class "title" ] [ text problem.title ]
+        , ul [ class "problem-tags" ] (List.map tagToHtml problem.problemTags)
+        , p [ class "info-line" ]
+            [ text "Deadline: "
+            , span [ class "info-value" ] [ text problem.deadline ]
+            ]
+        , p [ class "info-line" ]
+            [ text "Difficulty: "
+            , span [ class "info-value" ] [ text (problemDifficultyToStr problem.difficulty) ]
+            ]
+        , hr [] []
+        , div [ class "description" ] 
+            [ text problem.description
+            , div [ class "button-group" ]
+                [ button [ class "button download-button", onClick (DownloadTemplate problem.templateCode) ]
+                    [ text "Template" ]
+                ]
+            ]
+        , hr [] []
+        , div [ class "button-group" ]
+            [ input
+                [ type_ "file"
+                , onInput GotFile
+                ]
+                []
+            , button [ class "upload-button", onClick UploadSubmission ]
+                [ text "Submit" ]
+            ]
+        ]
+
+
 tagToHtml : String -> Html Msg
 tagToHtml tag =
     li [] [ text tag ]
 
-diffToStr : ProblemDifficulty -> String
-diffToStr difficulty =
-    case difficulty of
-        Easy         ->
-            "Easy"
-
-        Intermediate ->
-            "Intermediate"
-
-        Difficult    ->
-            "Difficult"
-
-        Extreme      ->
-            "Extreme"
-
--- fileDecoder : Decode.Decoder File
--- fileDecoder =
---   Decode.at ["target","file"] File.decoder
-
 
 -- PORT
+
+
 port openPlainTextTabPort : String -> Cmd msg
 
+
 -- HTTP
+
 
 getCodeProblem : Cmd Msg
 getCodeProblem =
@@ -206,19 +206,8 @@ getCodeProblem =
     }
 
 
-
-
-
-
 submitFile : String -> String -> Cmd Msg
 submitFile access file =
-    -- Http.post
-    --     { body = Http.jsonBody (submissionEncoder file)
-    --     , expect = Http.expectString CompletedSubmission
-    --     , url = "http://localhost:8080/coding-problems/123/attempts"
-    --     }
-
-
     let
         hs : List Http.Header
         hs =
@@ -238,6 +227,9 @@ submitFile access file =
             }
     in
     Http.request request
+
+
+-- EXPORT
 
 
 toSession : Model -> Session
