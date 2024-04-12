@@ -29,14 +29,19 @@ CREATE TABLE codingproblemcases (
 
 CREATE TABLE attempts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    userId UUID,
     codingProblemId UUID,
     submitted_on timestamptz default (now() at time zone 'utc'), 
     completed_on timestamptz default (now() at time zone 'utc'), 
     code text, 
     state text,
-    CONSTRAINT fk_codingproblem
+    CONSTRAINT fk_codingproblemattempt
         FOREIGN KEY(codingProblemId)
-            REFERENCES codingproblems(id)
+            REFERENCES codingproblems(id),
+            
+    CONSTRAINT fk_userattempt
+        FOREIGN KEY(userId)
+            REFERENCES users(id)
 );
 
 

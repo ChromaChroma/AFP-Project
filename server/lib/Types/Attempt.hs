@@ -20,8 +20,8 @@ import Types.CodingProblem
 
 
 data Code = Code
-  { relatedProblem :: CodingProblemId,
-    codeContents   :: Text
+  { relatedProblem :: CodingProblemId
+  , codeContents   :: Text
   }
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
 
@@ -58,10 +58,11 @@ data AttemptState r e
 -}
 
 data Attempt r e = Attempt
-  { submittedOn     :: UTCTime,
-    runCompletedOn  :: UTCTime,
-    code            :: Code,
-    state           :: AttemptState r e
+  { userId          :: UUID
+  , submittedOn     :: UTCTime
+  , runCompletedOn  :: UTCTime
+  , code            :: Code
+  , state           :: AttemptState r e
   }
   deriving (Generic, Show, Typeable, FromJSON, ToJSON)
 

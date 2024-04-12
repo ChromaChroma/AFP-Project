@@ -48,10 +48,10 @@ getCodingProblemCasesById conn cpId = do
 
 -- | Saves a 'CodeProblem' 'Attempt' in the Database
 saveAttempt :: Connection -> NormalAttempt -> IO ()
-saveAttempt conn a@(Attempt d1 d2 (Code pId c) s) = do 
+saveAttempt conn a@(Attempt uid  d1 d2 (Code pId c) s) = do 
   execute conn 
-    "insert into attempts (codingProblemId, submitted_on, completed_on, code, state) values (?, ?, ?, ?, ?);" 
-    (pId, d1, d2, c, s) 
+    "insert into attempts (userId, codingProblemId, submitted_on, completed_on, code, state) values (?, ?, ?, ?, ?, ?);" 
+    (uid, pId, d1, d2, c, s) 
   return ()
 
 -- 

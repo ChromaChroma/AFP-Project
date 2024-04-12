@@ -84,6 +84,6 @@ submitAttempt conn (Just c) pId (AttemptDTO code) = do
                                                     cases      <- liftIO $ DB.getCodingProblemCasesById conn pId
                                                     res        <- fromString <$> liftIO (processAttempt uid cp cases code)
                                                     now        <- liftIO getCurrentTime
-                                                    liftIO $ DB.saveAttempt conn (Attempt submitDate now (Code pId code) (Succeeded res))
+                                                    liftIO $ DB.saveAttempt conn (Attempt uid submitDate now (Code pId code) (Succeeded res))
                                                     return res
 submitAttempt _ _ _ _                             = throwM err401
