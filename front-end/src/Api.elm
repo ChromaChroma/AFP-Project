@@ -5,6 +5,8 @@ import Http
 import Utils.Types exposing (..)
 -- import Utils.Transcoder exposing (..)
 
+--  TODO; future work: This file should generalize the HTTP request and make use of Api.Endpoints.
+
 
 -- sendHttpRequest : HttpRequest -> Cmd msg
 -- sendHttpRequest metadata =

@@ -4,6 +4,9 @@ import Http
 import String exposing(fromInt)
 
 
+-- HTTP ERROR MESSAGES
+
+
 errorToStr : Http.Error -> String
 errorToStr error =
     case error of

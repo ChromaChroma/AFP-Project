@@ -10,6 +10,9 @@ import Utils.Session    as Session  exposing (getCred, getNavKey)
 import Utils.Types                  exposing (..)
 import Utils.Transcoder             exposing (..)
 import Utils.Error      as Error    exposing (..)
+import Json.Decode      as Decode
+import Maybe
+import Task
 -- import Api                          exposing (..)
 
 
@@ -40,6 +43,7 @@ type Msg
   | CompletedSubmission (Result Http.Error String)
   | GotFile             String 
   | GotSession          Session
+  | FileSelected (List File)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -69,7 +73,7 @@ update msg model =
                     Just cred ->
                         ( { model | submissionState = "Verifying implementation..." }
                         , submitFile cred.access file 
-                        )   -- TODO:handle this case
+                        )   |> Debug.log ("uploaded file content ::::" ++ file) -- TODO:handle this case
 
                     Nothing ->
                         ( { model | submissionState = "Not logged in: Cannot upload submission!" }
@@ -91,10 +95,19 @@ update msg model =
         , Cmd.none 
         ) 
 
-    GotFile file                      -> 
-        ( { model | uploadedSubmission = Just file }
+    GotFile content                      -> 
+        ( { model | uploadedSubmission = Just content }
         , Cmd.none
-        )
+        ) |> Debug.log ("tmp: uploaded file contains data: " ++ content)
+
+    FileSelected files                ->
+        case files of
+            []           ->
+                (model, Cmd.none) 
+                    |> Debug.log ("No file selected!")
+
+            content :: _ ->
+                (model, read content) 
 
     GotSession session                ->
         ( { model | session = session }
@@ -107,6 +120,11 @@ updateState transform model =
     ( { model | state = transform model.state }
     , Cmd.none 
     )
+
+
+read : File -> Cmd Msg
+read file =
+  Task.perform GotFile (File.toString file)
 
 
 -- SUBSCRIPTIONS
@@ -184,7 +202,7 @@ viewLoadedCodeProblem model problem =
         , div [ class "button-group" ]
             [ input
                 [ type_ "file"
-                , onInput GotFile
+                , on "change"  (Decode.map FileSelected filesDecoder)  --Input FileSelected
                 ]
                 []
             , button [ class "upload-button", onClick UploadSubmission ]
@@ -221,9 +239,11 @@ submitFile access file =
     let
         hs : List Http.Header
         hs =
-            [ Http.header "Access-Control-Allow-Origin" "*",
-              Http.header "Accept" "*/*",
-              Http.header "Authorization" ("Bearer " ++ access)
+            [ Http.header "Access-Control-Allow-Origin" "*"
+            , Http.header "Access-Control-Allow-Methods" "DELETE, POST, GET, OPTIONS"
+            , Http.header "Access-Control-Allow-Headers" "Content-Type, Authorization, X-Requested-With"
+            -- , Http.header "Accept" "*/*"
+            , Http.header "Authorization" ("Bearer " ++ access)
             ]
 
         request =

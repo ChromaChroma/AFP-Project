@@ -2,6 +2,7 @@ module Utils.Transcoder exposing (..)
 
 import Json.Decode as Decode exposing (Decoder, map7, field, string, list)
 import Json.Encode as Encode 
+import File exposing (File)
 import Utils.Types           exposing (..)
 
 
@@ -73,3 +74,8 @@ codeProblemDecoder =
     (field "description"  string           )
     (field "templateCode" string           )
     -- (field "testCases" (list string))
+
+
+filesDecoder : Decoder (List File)
+filesDecoder =
+  Decode.at ["target","files"] (Decode.list File.decoder)
